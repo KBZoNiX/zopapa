@@ -53,6 +53,10 @@ error). Requires the user's account to be in the `dialout` group.
   wired and initialized but never read anywhere in the firmware —
   currently dead.
 - `debug_macros.h` is not `#include`d anywhere — currently dead.
+- `maxCorrection()`/`relayAmplitude()` in `zopapa.ino` (formerly
+  `MAX_CORRECTION`/`RELAY_AMPLITUDE` consts) recompute from `SPEED` on
+  every call — fixed 2026-08, previously they froze at the default
+  `SPEED=100` forever, ignoring runtime speed changes.
 
 ## Conventions
 - Firmware comments and Serial output strings are in Spanish; keep new
