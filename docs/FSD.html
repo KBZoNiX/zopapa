@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zopapa FSD</title>
+<style>
+  :root{
+    --bg:#f1f3ee;
+    --surface:#ffffff;
+    --surface-alt:#e7ebe1;
+    --ink:#1b211c;
+    --ink-dim:#5c665d;
+    --accent:#2f6f4e;
+    --accent-soft:#dfe9e0;
+    --accent-2:#a8702f;
+    --accent-2-soft:#f1e6d5;
+    --border:#d7ddd0;
+    --code-bg:#e9ede2;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Consolas, "Liberation Mono", monospace;
+    --font-body: Optima, Candara, "Noto Sans", "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#121614;
+      --surface:#171c19;
+      --surface-alt:#1e2420;
+      --ink:#e7ece5;
+      --ink-dim:#96a498;
+      --accent:#63cc90;
+      --accent-soft:#1b2b21;
+      --accent-2:#dba05a;
+      --accent-2-soft:#2c2317;
+      --border:#2b332c;
+      --code-bg:#1b211d;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#121614;
+    --surface:#171c19;
+    --surface-alt:#1e2420;
+    --ink:#e7ece5;
+    --ink-dim:#96a498;
+    --accent:#63cc90;
+    --accent-soft:#1b2b21;
+    --accent-2:#dba05a;
+    --accent-2-soft:#2c2317;
+    --border:#2b332c;
+    --code-bg:#1b211d;
+  }
+
+  *{box-sizing:border-box;}
+  html{background:var(--bg);}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.65;
+    font-size:16px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:820px;margin:0 auto;padding:64px 26px 140px;}
+
+  code, .pin{
+    font-family:var(--font-mono);
+    background:var(--code-bg);
+    padding:1px 5px;
+    border-radius:3px;
+    font-size:0.86em;
+    color:var(--accent);
+    white-space:nowrap;
+  }
+
+  /* ---- Header ---- */
+  header.doc-head{border-bottom:3px double var(--border);padding-bottom:22px;margin-bottom:8px;}
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:0.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin:0 0 14px;
+  }
+  h1{
+    font-family:var(--font-mono);
+    font-size:clamp(2rem,6vw,2.7rem);
+    letter-spacing:.01em;
+    margin:0 0 6px;
+    text-wrap:balance;
+    color:var(--ink);
+  }
+  h1 span{color:var(--accent);}
+  .subtitle{
+    font-size:1.08rem;
+    color:var(--ink-dim);
+    margin:0 0 20px;
+    max-width:56ch;
+  }
+  .meta-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 22px;
+    font-family:var(--font-mono);
+    font-size:0.76rem;
+    color:var(--ink-dim);
+  }
+  .meta-row b{color:var(--ink);font-weight:600;}
+
+  /* ---- TOC ---- */
+  nav.toc{
+    margin:36px 0 8px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:20px 24px;
+  }
+  nav.toc .eyebrow{margin-bottom:10px;}
+  nav.toc ol{
+    columns:2;
+    column-gap:32px;
+    list-style:none;
+    margin:0;
+    padding:0;
+    font-size:0.9rem;
+  }
+  nav.toc li{break-inside:avoid;margin-bottom:7px;}
+  nav.toc a{
+    color:var(--ink);
+    text-decoration:none;
+    display:flex;
+    gap:8px;
+  }
+  nav.toc a:hover{color:var(--accent);}
+  nav.toc a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  nav.toc .n{font-family:var(--font-mono);color:var(--ink-dim);min-width:1.6em;}
+
+  /* ---- Sections ---- */
+  section{margin-top:56px;}
+  h2{
+    font-family:var(--font-mono);
+    font-size:1rem;
+    text-transform:uppercase;
+    letter-spacing:.07em;
+    color:var(--accent);
+    border-bottom:1px solid var(--border);
+    padding-bottom:10px;
+    margin:0 0 20px;
+    display:flex;
+    gap:12px;
+    align-items:baseline;
+    scroll-margin-top:20px;
+  }
+  h2 .num{color:var(--ink-dim);font-weight:400;}
+  h3{
+    font-family:var(--font-mono);
+    font-size:0.92rem;
+    color:var(--ink);
+    margin:30px 0 10px;
+    scroll-margin-top:20px;
+  }
+  p{margin:0 0 14px;max-width:68ch;}
+  ul, ol.plain{margin:0 0 14px;padding-left:1.3em;max-width:66ch;}
+  li{margin-bottom:5px;}
+  strong{color:var(--ink);}
+
+  /* ---- Tables ---- */
+  .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:6px;margin:0 0 18px;}
+  table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:0.82rem;font-variant-numeric:tabular-nums;background:var(--surface);}
+  caption{
+    text-align:left;
+    font-family:var(--font-body);
+    font-size:0.82rem;
+    color:var(--ink-dim);
+    padding:10px 14px 4px;
+    caption-side:top;
+  }
+  th{
+    text-align:left;
+    font-weight:600;
+    color:var(--ink-dim);
+    text-transform:uppercase;
+    font-size:0.66rem;
+    letter-spacing:.06em;
+    border-bottom:2px solid var(--accent);
+    padding:9px 12px;
+    white-space:nowrap;
+  }
+  td{padding:7px 12px;border-bottom:1px solid var(--border);vertical-align:top;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:nth-child(even) td{background:var(--surface-alt);}
+
+  /* ---- Note / flag callouts ---- */
+  .note{
+    border-left:3px solid var(--accent-2);
+    background:var(--accent-2-soft);
+    padding:11px 16px;
+    border-radius:0 6px 6px 0;
+    font-size:0.9rem;
+    margin:0 0 16px;
+    max-width:66ch;
+  }
+  .note b{color:var(--accent-2);font-family:var(--font-mono);font-size:0.72rem;letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:4px;}
+
+  .finding-list{list-style:none;margin:0;padding:0;}
+  .finding-list li{
+    border:1px solid var(--border);
+    border-left:3px solid var(--accent-2);
+    background:var(--surface);
+    border-radius:0 6px 6px 0;
+    padding:12px 16px;
+    margin-bottom:10px;
+  }
+  .finding-list .tag{
+    font-family:var(--font-mono);
+    font-size:0.66rem;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--accent-2);
+    display:block;
+    margin-bottom:5px;
+  }
+
+  /* ---- Diagram ---- */
+  figure.diagram{margin:0 0 8px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:8px;}
+  figure.diagram svg{width:100%;height:auto;display:block;}
+  figcaption{font-size:0.82rem;color:var(--ink-dim);margin-top:14px;text-align:center;}
+
+  /* ---- State pills ---- */
+  .pill{
+    display:inline-block;
+    font-family:var(--font-mono);
+    font-size:0.7rem;
+    padding:2px 9px;
+    border-radius:20px;
+    border:1px solid var(--border);
+    color:var(--ink-dim);
+  }
+  .pill.on{color:var(--accent);border-color:var(--accent);background:var(--accent-soft);}
+
+  footer{margin-top:80px;padding-top:20px;border-top:1px solid var(--border);font-size:0.76rem;color:var(--ink-dim);font-family:var(--font-mono);}
+
+  a{color:var(--accent);}
+  ::selection{background:var(--accent);color:var(--surface);}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<header class="doc-head">
+  <p class="eyebrow">Functional Specification Document · Rev C (derived)</p>
+  <h1>ZOPAPA <span>/ FSD</span></h1>
+  <p class="subtitle">Two-wheel differential-drive line-following robot — Arduino Nano controller, 8-channel reflectance sensor array, PD steering with relay-method autotune.</p>
+  <div class="meta-row">
+    <span><b>Scope</b> Firmware (6 files) + 2 vendored libraries + 2 KiCad PCB projects</span>
+    <span><b>Method</b> Static source &amp; schematic analysis</span>
+    <span><b>Date</b> 2026-08-16</span>
+    <span><b>Status</b> Reverse-engineered — no prior spec in repo</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <p class="eyebrow">Contents</p>
+  <ol>
+    <li><a href="#s1"><span class="n">1</span> Purpose &amp; scope</span></a></li>
+    <li><a href="#s2"><span class="n">2</span> System overview</a></li>
+    <li><a href="#s3"><span class="n">3</span> Main PCB — Rapiduino</a></li>
+    <li><a href="#s4"><span class="n">4</span> Sensor PCB — ATR-8A</a></li>
+    <li><a href="#s5"><span class="n">5</span> Electrical interconnect</a></li>
+    <li><a href="#s6"><span class="n">6</span> Firmware architecture</a></li>
+    <li><a href="#s7"><span class="n">7</span> Functional behavior</a></li>
+    <li><a href="#s8"><span class="n">8</span> Autotune subsystem</a></li>
+    <li><a href="#s9"><span class="n">9</span> Command interface</a></li>
+    <li><a href="#s10"><span class="n">10</span> Persistent storage</a></li>
+    <li><a href="#s11"><span class="n">11</span> Configuration parameters</a></li>
+    <li><a href="#s12"><span class="n">12</span> DIP switch reference</a></li>
+    <li><a href="#s13"><span class="n">13</span> Assumptions &amp; open items</a></li>
+  </ol>
+</nav>
+
+<section id="s1">
+  <h2><span class="num">1.</span> Purpose &amp; scope</h2>
+  <p>This document specifies the observed functional behavior of the <strong>Zopapa</strong> line-following robot as implemented today, built directly from the firmware source (<code>src/zopapa/zopapa.ino</code> plus five companion files), its two vendored libraries (<code>src/libraries/DRV8833</code>, <code>src/libraries/ATRSensors</code>), and the two KiCad hardware projects in <code>hardware/</code>: the <strong>Rapiduino</strong> main controller board and the <strong>ATR-8A</strong> 8-channel sensor board. No design document existed in the repository prior to this one — everything here is inferred from code and schematic/BOM inspection, not from an author's stated intent.</p>
+  <p>Where a hardware net could not be traced pin-for-pin with certainty (component geometry only, no textual net label), the claim is marked as inferred rather than confirmed. Section 13 collects every such item plus behavioral discrepancies found between code, comments, and naming.</p>
+</section>
+
+<section id="s2">
+  <h2><span class="num">2.</span> System overview</h2>
+  <p>The robot is a two-wheel differential-drive platform that follows a black or white line using an 8-sensor reflectance array, correcting heading with a proportional–derivative control loop (labeled "PID" throughout the code and comments, though no integral term is implemented — see 7.3). An optional turbine/fan subsystem adds downforce at speed. Live tuning and telemetry run over a single UART shared by USB and an onboard Bluetooth header. A relay-feedback (Åström–Hägglund) routine can auto-compute the PD gains, which persist to EEPROM on operator command.</p>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 900 560" role="img" aria-label="System block diagram: battery, sensor array, HMI and Bluetooth/serial all connect to the main PCB hub, which drives the left motor, right motor and turbine.">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <g style="color:var(--ink-dim)" fill="none" stroke="currentColor" stroke-width="1.6">
+        <!-- Sensor -> Hub (vertical) -->
+        <line x1="450" y1="112" x2="450" y2="226" marker-end="url(#arrow)"/>
+        <!-- HMI -> Hub (horizontal) -->
+        <line x1="232" y1="280" x2="338" y2="280" marker-end="url(#arrow)"/>
+        <!-- Hub -> Turbine (horizontal) -->
+        <line x1="562" y1="280" x2="668" y2="280" marker-end="url(#arrow)"/>
+        <!-- Battery -> Hub (diagonal) -->
+        <line x1="228" y1="106" x2="348" y2="242" marker-end="url(#arrow)"/>
+        <!-- BT/Serial <-> Hub (diagonal, both ends) -->
+        <line x1="672" y1="106" x2="552" y2="242" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+        <!-- Hub -> Motor L (diagonal) -->
+        <line x1="348" y1="318" x2="228" y2="452" marker-end="url(#arrow)"/>
+        <!-- Hub -> Motor R (diagonal) -->
+        <line x1="552" y1="318" x2="672" y2="452" marker-end="url(#arrow)"/>
+      </g>
+
+      <!-- edge labels -->
+      <g style="color:var(--ink-dim)" font-family="ui-monospace, monospace" font-size="12">
+        <rect x="384" y="158" width="132" height="18" fill="var(--surface)"/>
+        <text x="450" y="171" text-anchor="middle">8× analog · line pos.</text>
+
+        <rect x="238" y="271" width="90" height="18" fill="var(--surface)"/>
+        <text x="283" y="284" text-anchor="middle">digital I/O</text>
+
+        <rect x="566" y="271" width="98" height="18" fill="var(--surface)"/>
+        <text x="615" y="284" text-anchor="middle">PWM · ramped</text>
+
+        <rect x="200" y="160" width="112" height="18" fill="var(--surface)"/>
+        <text x="256" y="173" text-anchor="middle">VBATT switched</text>
+
+        <rect x="560" y="160" width="106" height="18" fill="var(--surface)"/>
+        <text x="613" y="173" text-anchor="middle">UART commands</text>
+
+        <rect x="215" y="372" width="118" height="18" fill="var(--surface)"/>
+        <text x="274" y="385" text-anchor="middle">2× PWM dir+speed</text>
+
+        <rect x="567" y="372" width="118" height="18" fill="var(--surface)"/>
+        <text x="626" y="385" text-anchor="middle">2× PWM dir+speed</text>
+      </g>
+
+      <!-- Boxes -->
+      <g font-family="ui-monospace, monospace" font-size="13" text-anchor="middle">
+        <!-- Battery -->
+        <g style="color:var(--ink)">
+          <rect x="30" y="50" width="200" height="60" rx="6" fill="var(--surface)" stroke="var(--border)"/>
+          <text x="130" y="76" fill="currentColor" font-weight="600">BATTERY</text>
+          <text x="130" y="94" fill="var(--ink-dim)" font-size="11">SW1 power switch</text>
+        </g>
+        <!-- Sensor array -->
+        <g style="color:var(--ink)">
+          <rect x="350" y="50" width="200" height="60" rx="6" fill="var(--surface)" stroke="var(--border)"/>
+          <text x="450" y="76" fill="currentColor" font-weight="600">SENSOR PCB</text>
+          <text x="450" y="94" fill="var(--ink-dim)" font-size="11">8× QRE1113 (ATR-8A)</text>
+        </g>
+        <!-- BT/serial -->
+        <g style="color:var(--ink)">
+          <rect x="670" y="50" width="200" height="60" rx="6" fill="var(--surface)" stroke="var(--border)"/>
+          <text x="770" y="76" fill="currentColor" font-weight="600">BT / USB SERIAL</text>
+          <text x="770" y="94" fill="var(--ink-dim)" font-size="11">J5 header, shared UART</text>
+        </g>
+        <!-- HMI -->
+        <g style="color:var(--ink)">
+          <rect x="30" y="250" width="200" height="60" rx="6" fill="var(--surface)" stroke="var(--border)"/>
+          <text x="130" y="272" fill="currentColor" font-weight="600">HMI</text>
+          <text x="130" y="289" fill="var(--ink-dim)" font-size="11">button · DIP×4 · LED · buzzer</text>
+        </g>
+        <!-- Hub -->
+        <g style="color:var(--accent)">
+          <rect x="340" y="230" width="220" height="100" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/>
+          <text x="450" y="262" fill="currentColor" font-weight="700" font-size="14">MAIN PCB</text>
+          <text x="450" y="282" fill="var(--ink)" font-size="11">Rapiduino</text>
+          <text x="450" y="298" fill="var(--ink-dim)" font-size="11">Arduino Nano + TB6612FNG</text>
+          <text x="450" y="314" fill="var(--ink-dim)" font-size="11">driver module</text>
+        </g>
+        <!-- Turbine -->
+        <g style="color:var(--ink)">
+          <rect x="670" y="250" width="200" height="60" rx="6" fill="var(--surface)" stroke="var(--border)"/>
+          <text x="770" y="272" fill="currentColor" font-weight="600">TURBINE</text>
+          <text x="770" y="289" fill="var(--ink-dim)" font-size="11">Q1 MOSFET + boost conv.</text>
+        </g>
+        <!-- Motor L -->
+        <g style="color:var(--ink)">
+          <rect x="30" y="450" width="200" height="60" rx="6" fill="var(--surface)" stroke="var(--border)"/>
+          <text x="130" y="472" fill="currentColor" font-weight="600">MOTOR L</text>
+          <text x="130" y="489" fill="var(--ink-dim)" font-size="11">J8, via A2 A01/A02</text>
+        </g>
+        <!-- Motor R -->
+        <g style="color:var(--ink)">
+          <rect x="670" y="450" width="200" height="60" rx="6" fill="var(--surface)" stroke="var(--border)"/>
+          <text x="770" y="472" fill="currentColor" font-weight="600">MOTOR R</text>
+          <text x="770" y="489" fill="var(--ink-dim)" font-size="11">J9, via A2 B01/B02</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Fig. 1 — Signal-level architecture. The main PCB is the hub for power, sensing, actuation and the command link; the sensor PCB is a separate board joined by a 10-way header.</figcaption>
+  </figure>
+</section>
+
+<section id="s3">
+  <h2><span class="num">3.</span> Main PCB — Rapiduino</h2>
+  <p>Two-layer board, 1.6&nbsp;mm thickness, built around a through-hole-socketed <strong>Arduino Nano</strong> (A1). Motor drive is an off-board <strong>TB6612FNG</strong> carrier module (A2) rather than a bare IC on the PCB. Passive support is mostly 0805 SMD; connectors are 2.54&nbsp;mm through-hole headers throughout.</p>
+
+  <h3>3.1 Key subsystems</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Subsystem</th><th>Implementation</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>MCU</td><td>Arduino Nano (socketed module, A1)</td><td>8-bit AVR, 5&nbsp;V logic</td></tr>
+        <tr><td>Motor driver</td><td>TB6612FNG breakout module (A2)</td><td>Dual H-bridge; see §5 for control convention</td></tr>
+        <tr><td>Turbine driver</td><td>Q1 IRLR2905 low-side MOSFET (TO-252)</td><td>Gated by D5 PWM; feeds turbine through an external boost converter (J3/J4)</td></tr>
+        <tr><td>Power input</td><td>J1 battery header → SW1 (DPDT latch) → bulk caps C1/C2</td><td>J10 3-pin jumper selects the Arduino's power source</td></tr>
+        <tr><td>HMI</td><td>SW2 pushbutton (+ J7 external header), SW3 4-pos DIP bank, D3/D5/D12 LEDs, BZ1 buzzer</td><td>See §12 for DIP mapping</td></tr>
+        <tr><td>Connectivity</td><td>J5 4-pin header (Bluetooth module)</td><td>Shares the Nano's single hardware UART with USB programming/Serial Monitor</td></tr>
+        <tr><td>Sensor interface</td><td>J6 10-pin header → A0–A7</td><td>Mates with ATR-8A's CN1</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>3.2 Bill of materials</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Ref</th><th>Description</th><th>Value</th><th>Package</th></tr></thead>
+      <tbody>
+        <tr><td>A1</td><td>Arduino Nano module</td><td>v2.x</td><td>THT, socketed</td></tr>
+        <tr><td>A2</td><td>Motor driver module</td><td>TB6612FNG</td><td>Module</td></tr>
+        <tr><td>BZ1</td><td>Buzzer</td><td>—</td><td>THT 12×9.5&nbsp;mm</td></tr>
+        <tr><td>C1</td><td>Electrolytic cap</td><td>220&nbsp;µF</td><td>THT radial ⌀6.3</td></tr>
+        <tr><td>C2</td><td>Electrolytic cap</td><td>100&nbsp;µF</td><td>THT radial ⌀6.3</td></tr>
+        <tr><td>C3</td><td>Ceramic cap</td><td>10&nbsp;µF</td><td>SMD 1206</td></tr>
+        <tr><td>D1</td><td>Rectifier diode</td><td>1N4007</td><td>THT DO-41</td></tr>
+        <tr><td>D3, D5, D12</td><td>Indicator LEDs (×3)</td><td>—</td><td>SMD 1206</td></tr>
+        <tr><td>J1</td><td>Header 1×2 — BATT</td><td>—</td><td>THT 2.54&nbsp;mm</td></tr>
+        <tr><td>J2</td><td>Header 1×2 — Turbina</td><td>—</td><td>THT 2.54&nbsp;mm</td></tr>
+        <tr><td>J3 / J4</td><td>Header 1×2 — Vboost in/out</td><td>—</td><td>THT 2.54&nbsp;mm</td></tr>
+        <tr><td>J5</td><td>Socket 1×4 — Bluetooth</td><td>—</td><td>THT 2.54&nbsp;mm</td></tr>
+        <tr><td>J6</td><td>Header 1×10 — Conn_sensores</td><td>—</td><td>THT 2.54&nbsp;mm</td></tr>
+        <tr><td>J7</td><td>Header 1×2 — Start</td><td>—</td><td>THT 2.54&nbsp;mm</td></tr>
+        <tr><td>J8 / J9</td><td>Header 1×2 — Motor A/B</td><td>—</td><td>THT 2.54&nbsp;mm</td></tr>
+        <tr><td>J10</td><td>Header 1×3 — Arduino power jumper</td><td>—</td><td>THT 2.54&nbsp;mm</td></tr>
+        <tr><td>Q1</td><td>N-ch MOSFET</td><td>IRLR2905</td><td>TO-252</td></tr>
+        <tr><td>R1, R3, R4</td><td>Resistor (×3)</td><td>470&nbsp;Ω</td><td>SMD 0805</td></tr>
+        <tr><td>R2</td><td>Resistor</td><td>100&nbsp;Ω</td><td>SMD 0805</td></tr>
+        <tr><td>R5</td><td>Resistor — TX→BT divider, series leg</td><td>1&nbsp;kΩ</td><td>SMD 0805</td></tr>
+        <tr><td>R6</td><td>Resistor — TX→BT divider, ground leg</td><td>2.2&nbsp;kΩ</td><td>SMD 0805</td></tr>
+        <tr><td>SW1</td><td>Power switch</td><td>DPDT push-latch</td><td>THT 7×7&nbsp;mm</td></tr>
+        <tr><td>SW2</td><td>Pushbutton</td><td>—</td><td>THT 6&nbsp;mm</td></tr>
+        <tr><td>SW3</td><td>DIP switch, 4-pos</td><td>—</td><td>THT 9.78×12.34&nbsp;mm</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="s4">
+  <h2><span class="num">4.</span> Sensor PCB — ATR-8A</h2>
+  <p>A dedicated 8-channel reflectance array using QRE1113GR phototransistor/IR-LED pairs (U1–U8), read as analog voltage dividers — not the digital RC-discharge timing scheme some QTR-style boards use. Each phototransistor has its own 47&nbsp;kΩ pull-up feeding directly into one Arduino ADC channel. Only four 120&nbsp;Ω resistors serve eight IR LEDs, consistent with the LEDs being wired in series pairs to share a single current-limiting resistor per pair. Two 0.1&nbsp;µF caps decouple the board's local supply rail. All 10 signals (8 channels + VCC + GND) leave through a single header, CN1, matching the main board's J6.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Ref</th><th>Description</th><th>Value</th><th>Package</th></tr></thead>
+      <tbody>
+        <tr><td>U1–U8</td><td>Reflective object sensor (×8)</td><td>QRE1113GR</td><td>SMD, OptoDevice CASE100</td></tr>
+        <tr><td>R1, R4, R7, R10</td><td>IR-LED current limit, shared per pair (×4)</td><td>120&nbsp;Ω</td><td>SMD 0805</td></tr>
+        <tr><td>R2, R3, R5, R6, R8, R9, R11, R12</td><td>Phototransistor pull-up, one per channel (×8)</td><td>47&nbsp;kΩ</td><td>SMD 0805</td></tr>
+        <tr><td>C1, C2</td><td>Supply decoupling (×2)</td><td>0.1&nbsp;µF</td><td>SMD 0805</td></tr>
+        <tr><td>CN1</td><td>Header 1×10 — Conector</td><td>—</td><td>THT 2.54&nbsp;mm</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="s5">
+  <h2><span class="num">5.</span> Electrical interconnect — Arduino pin map</h2>
+  <p>Pin functions below are read directly from net labels in the Rapiduino schematic and cross-checked against the firmware's pin constants; they match exactly. <span class="pin">*</span> marks hardware-PWM-capable pins that the firmware actually drives with <code>analogWrite()</code>.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Pin</th><th>Net / function</th><th>Dir.</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>D0</td><td>RX</td><td>in</td><td>Shared: USB programming + Bluetooth (J5)</td></tr>
+        <tr><td>D1</td><td>TX</td><td>out</td><td>Shared: USB programming + Bluetooth (J5); passes through R5/R6 divider, 5&nbsp;V→≈3.3&nbsp;V, before reaching the BT module's RX</td></tr>
+        <tr><td>D2</td><td>PULSADOR</td><td>in, pull-up</td><td>Main pushbutton SW2; also broken out at J7 "Start"</td></tr>
+        <tr><td>D3 <span class="pin">*</span></td><td>MA02</td><td>out</td><td>Left motor driver input 2, via A2 → J8</td></tr>
+        <tr><td>D4</td><td>DIP_SW4</td><td>in, pull-up</td><td>Autotune arm switch</td></tr>
+        <tr><td>D5 <span class="pin">*</span></td><td>TURBINA</td><td>out</td><td>Gate of Q1 → turbine, via J2 / boost conv. J3-J4</td></tr>
+        <tr><td>D6</td><td>DIP_SW3</td><td>in, pull-up</td><td>Turbine enable</td></tr>
+        <tr><td>D7</td><td>DIP_SW2</td><td>in, pull-up</td><td>"Increase KP/KD" — defined, unused (§13)</td></tr>
+        <tr><td>D8</td><td>DIP_SW1</td><td>in, pull-up</td><td>"Increase speed" — defined, unused (§13)</td></tr>
+        <tr><td>D9 <span class="pin">*</span></td><td>MB01</td><td>out</td><td>Right motor driver input 1, via A2 → J9</td></tr>
+        <tr><td>D10 <span class="pin">*</span></td><td>MB02</td><td>out</td><td>Right motor driver input 2, via A2 → J9</td></tr>
+        <tr><td>D11 <span class="pin">*</span></td><td>MA01</td><td>out</td><td>Left motor driver input 1, via A2 → J8</td></tr>
+        <tr><td>D12</td><td>LED</td><td>out</td><td>Status indicator</td></tr>
+        <tr><td>D13</td><td>BUZZER</td><td>out</td><td>Drives BZ1</td></tr>
+        <tr><td>A0–A7</td><td>Sensor channels 0–7</td><td>in, analog</td><td>Via J6 ↔ CN1 to the ATR-8A board</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note">
+    <b>Confirmed by designer</b>
+    The TB6612FNG module exposes <code>PWMA</code>, <code>AIN1</code>, <code>AIN2</code>, <code>STBY</code>, <code>BIN1</code>, <code>BIN2</code>, <code>PWMB</code> — seven control pins — but the firmware only ever drives two Arduino pins per motor, via the vendored <code>DRV8833</code> library (§6.1). <code>STBY</code>, <code>PWMA</code> and <code>PWMB</code> are never toggled by code because they are hardwired directly to the <strong>+5&nbsp;V</strong> rail, permanently enabling the driver. R5 (1&nbsp;kΩ) and R6 (2.2&nbsp;kΩ) are unrelated to the driver: together they form a resistive divider that shifts the Nano's 5&nbsp;V TX line down to ≈3.3&nbsp;V (5&nbsp;V × R6/(R5+R6) ≈ 3.44&nbsp;V) for the Bluetooth module's RX input — see D0/D1 in the pin map above.
+  </div>
+</section>
+
+<section id="s6">
+  <h2><span class="num">6.</span> Firmware architecture</h2>
+  <p>Six sketch files in <code>src/zopapa/</code>, compiled together as one Arduino sketch (all <code>.ino</code> files in a sketch folder share one translation unit), plus two vendored libraries under <code>src/libraries/</code> — both first-party code by Mauricio Venanzoni, not the SparkFun/Pololu libraries of the same or similar names.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>File</th><th>Responsibility</th></tr></thead>
+      <tbody>
+        <tr><td>zopapa.ino</td><td>Entry point: config constants, pin setup, calibration sequence, top-level state machine (<code>loop()</code>), core steering loop (<code>correr()</code>), status feedback</td></tr>
+        <tr><td>autotune.ino</td><td>Relay-feedback (Åström–Hägglund) autotune algorithm; EEPROM read/write for KP/KD/SPEED; autotune arm-and-confirm flow</td></tr>
+        <tr><td>bt.ino</td><td>Serial/Bluetooth command parser and dispatcher; sensor bar test mode</td></tr>
+        <tr><td>turb.ino</td><td>Turbine PWM ramp control</td></tr>
+        <tr><td>extras.ino</td><td>Generic helpers: pin toggle, debounced button read, buzzer beep</td></tr>
+        <tr><td>debug_macros.h</td><td>Conditional <code>DBG_PRINT…</code> macros gated on <code>DEBUG==1</code> — not <code>#include</code>d anywhere; currently inert</td></tr>
+        <tr><td>src/libraries/DRV8833</td><td>Motor driver abstraction — two Arduino pins per motor, see §6.1</td></tr>
+        <tr><td>src/libraries/ATRSensors</td><td>Fast analog line-sensor reading — see §6.2</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>6.1 DRV8833 — motor driver library</h3>
+  <p>A from-scratch library (v1.0, 2022-07-19) written to drive a DRV8833/TB6612-class dual H-bridge using only two Arduino pins per motor. Each instance owns two pins and defaults to <strong>SLOW_DECAY</strong> mode — <code>motorIzq.mode()</code>/<code>motorDer.mode()</code> are never called in the sketch, so this default is what actually runs. In SLOW_DECAY, <code>speed(x)</code> holds one pin <strong>HIGH</strong> (sets direction) and PWMs the other pin at duty <code>255 − |x|</code> — a locked-antiphase drive, the inverse of a naive "one pin PWM, other pin LOW" scheme: <code>x&nbsp;=&nbsp;0</code> yields ~100% duty on the PWM pin (near-full braking torque at rest), while <code>x&nbsp;=&nbsp;±255</code> yields ~0% duty (free spin). <code>stop()</code> drives both pins HIGH (hard brake); <code>free()</code> drives both pins LOW (coast).</p>
+  <p>This is consistent with §5: a TB6612 module only behaves this way if its <code>PWMA</code>/<code>PWMB</code>/<code>STBY</code> lines are already held enabled, since the library never touches them — and on this board those three lines are hardwired directly to +5&nbsp;V for exactly that reason.</p>
+
+  <h3>6.2 ATRSensors — line sensor library</h3>
+  <p>A modified, speed-optimized fork of Pololu's QTRSensors (public 2010 code, CC BY-SA 3.0 notice retained in the header), restricted to analog-only sensors. Two changes account for its performance: the ADC prescaler is dropped from the Arduino default of 128 to 32, and each sensor is read with a single sample instead of QTRSensors' 4-sample average. Per the library's own header comment, this cuts per-sensor read time from ~450&nbsp;µs to ~45&nbsp;µs, and <code>readLine()</code> over 4 sensors from ~2100&nbsp;µs to ~250&nbsp;µs. That speed-up is what makes reading all 8 channels fit comfortably inside the 2&nbsp;ms <code>LOOP_MS</code> control period (§7.3, §11).</p>
+  <p>It also changes the original library's output scale: <code>readLine()</code> returns <strong>100 units per sensor</strong>, not QTRSensors' 1000 — which is why <code>zopapa.ino</code> computes <code>centro_de_linea = (N−1)×100/2 = 350</code> for the 8-sensor array rather than 3500. IR-LED brightness control from the original QTRSensors is disabled, consistent with the ATR-8A board having no LED-enable/dimming circuitry (§4).</p>
+</section>
+
+<section id="s7">
+  <h2><span class="num">7.</span> Functional behavior</h2>
+
+  <h3>7.1 Operating states</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>State</th><th>Value</th><th>Motors</th><th>Turbine</th><th>Serial commands accepted</th></tr></thead>
+      <tbody>
+        <tr><td>Stopped</td><td>0</td><td>Off</td><td>Off</td><td>Full command set</td></tr>
+        <tr><td>Running</td><td>1</td><td>PD steering active</td><td>Off</td><td><code>P</code> (stop) only</td></tr>
+        <tr><td>Running + Turbine</td><td>2</td><td>PD steering active</td><td>Ramped, correction-proportional</td><td><code>P</code> (stop) only</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>A short press of the pushbutton cycles Stopped → Running (or Running+Turbine, if DIP_SW3 reads LOW at the moment of the press) → Stopped. Holding the button ≥2&nbsp;s while DIP_SW4 is LOW instead <strong>saves</strong> the current KP/KD/SPEED to EEPROM and forces Running state — it does not launch autotune itself (that only happens at boot, or via the <code>T</code> serial command).</p>
+
+  <h3>7.2 Startup &amp; calibration</h3>
+  <p>On reset: beep/LED intro, then a fixed 3-second manual calibration window (sensor bar min/max learning) during which the operator sweeps the array across the line. If <code>EEPROM_AUTOLOAD</code> is set, saved KP/KD/SPEED load from EEPROM. If DIP_SW4 reads LOW, a 5-second window opens for a button press to launch autotune before falling through to normal Stopped state.</p>
+
+  <h3>7.3 Steering control loop</h3>
+  <p>Runs every <code>LOOP_MS</code> = 2&nbsp;ms. Line position is read as <code>centro_de_linea − Regleta.readLine()</code>, where <code>centro_de_linea</code> = 350 for 8 sensors (range roughly −350…+350). Correction is:</p>
+  <p style="font-family:var(--font-mono);background:var(--surface-alt);padding:12px 16px;border-radius:6px;">correction&nbsp;=&nbsp;KP·position&nbsp;+&nbsp;KD·(position&nbsp;−&nbsp;last_position)</p>
+  <p>Clamped to ±<code>MAX_CORRECTION</code> (2×SPEED) and applied asymmetrically: whichever wheel needs to slow down is reduced by the correction magnitude, while the other wheel stays pinned at <code>SPEED</code> — it is not a symmetric add-to-one/subtract-from-other mix. Each wheel's resulting target then passes through <code>DRV8833::speed()</code> (§6.1), which realizes it as a locked-antiphase (slow-decay) drive rather than a simple one-pin-PWM/one-pin-LOW scheme.</p>
+  <div class="note"><b>Naming discrepancy</b> The controller has proportional and derivative terms only — <code>KP·position + KD·Δposition</code>, no integral accumulator — yet is called "PID" throughout the code, comments, and the autotune routine.</div>
+
+  <h3>7.4 Line-loss safety cutoff</h3>
+  <p>If the reported position saturates at either extreme (line off both visible edges), a counter increments each loop; after <code>MAX_CICLOS_SIN_DETECTAR</code> = 100 consecutive cycles (~200&nbsp;ms at the 2&nbsp;ms loop rate) with no line detected, the robot auto-stops.</p>
+
+  <h3>7.5 Turbine control</h3>
+  <p>Active only in Running+Turbine. Target duty is <code>map(abs(correction), 0, MAX_CORRECTION, MIN_SUCTION, MAX_SUCTION)</code> — i.e. suction scales with how hard the robot is steering — ramped toward that target by <code>RAMP_STEP</code>=5 per cycle for a smooth response. <code>MIN_SUCTION</code>/<code>MAX_SUCTION</code> are 20/80 out of 255 (~8–31% duty); a source comment flags 128/255 (~50%, ~4&nbsp;V) as the hardware ceiling not to exceed, which the configured range respects with margin.</p>
+</section>
+
+<section id="s8">
+  <h2><span class="num">8.</span> Autotune subsystem</h2>
+  <p>Implements the relay-feedback (Åström–Hägglund) method to derive PD gains from an induced, self-sustaining steering oscillation.</p>
+  <ol class="plain">
+    <li><strong>Trigger.</strong> Either (a) at boot, if DIP_SW4 is LOW, a 5&nbsp;s window opens for a button press to start it, or (b) any time via the <code>T</code> serial command.</li>
+    <li><strong>Excitation.</strong> Steering correction is forced to a fixed-amplitude square wave (<code>d</code> = 0.5×SPEED), flipping sign each time a peak in line position is detected, sustaining oscillation.</li>
+    <li><strong>Measurement.</strong> The first 3 peaks are discarded (settling); the next 6 peaks' amplitude (<code>a</code>) and period (<code>Pu</code>) are averaged.</li>
+    <li><strong>Gain calculation.</strong> Ultimate gain <code>Ku = 4d / (π·a)</code>; Ziegler–Nichols PD rule gives <code>Kp = 0.8·Ku</code>, <code>Kd = Ku·Pu/8</code>, both scaled by a 0.9 safety factor before being installed into RAM.</li>
+    <li><strong>Persistence.</strong> New gains live in RAM only — nothing is written to EEPROM until the operator explicitly commits via the long-press gesture (§7.1) or the <code>W</code> serial command.</li>
+  </ol>
+  <div class="note"><b>Comment vs. code mismatch</b> The safety timeout constant is <code>2000&nbsp;ms</code> (2&nbsp;s), but the adjacent source comment reads "25 s timeout". The 2&nbsp;s value is what actually governs the abort.</div>
+</section>
+
+<section id="s9">
+  <h2><span class="num">9.</span> Command interface (Serial / Bluetooth)</h2>
+  <p>A single parser reads line-buffered text from the Nano's one hardware UART — physically shared between the USB programming port and the Bluetooth header (J5) at 9600&nbsp;baud. The firmware has no way to distinguish which physical link a command arrived on.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Cmd</th><th>Function</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td><code>S</code></td><td>Start (Running state)</td><td><code>S</code></td></tr>
+        <tr><td><code>P</code></td><td>Stop</td><td><code>P</code></td></tr>
+        <tr><td><code>T</code></td><td>Run autotune</td><td><code>T</code></td></tr>
+        <tr><td><code>Vxxx</code></td><td>Set speed</td><td><code>V180</code></td></tr>
+        <tr><td><code>Kxxx</code></td><td>Set KP</td><td><code>K22.5</code></td></tr>
+        <tr><td><code>Dxxx</code></td><td>Set KD</td><td><code>D15.3</code></td></tr>
+        <tr><td><code>R</code></td><td>Report current parameters</td><td><code>R</code></td></tr>
+        <tr><td><code>L</code></td><td>Load parameters from EEPROM</td><td><code>L</code></td></tr>
+        <tr><td><code>W</code></td><td>Save parameters to EEPROM</td><td><code>W</code></td></tr>
+        <tr><td><code>Q</code></td><td>Live sensor bar test (raw readings)</td><td><code>Q</code></td></tr>
+        <tr><td><code>H</code></td><td>Print command help</td><td><code>H</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note"><b>Behavioral asymmetry</b> The <code>S</code> command always enters plain Running state — it never checks DIP_SW3 to enter Running+Turbine, unlike the pushbutton path in §7.1. Turbine mode is reachable via the button but not via a serial start.</div>
+</section>
+
+<section id="s10">
+  <h2><span class="num">10.</span> Persistent storage — EEPROM layout</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Address</th><th>Size</th><th>Content</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>1 byte</td><td>Init flag (1 = valid data present)</td></tr>
+        <tr><td>4</td><td>4 bytes (float)</td><td>KP</td></tr>
+        <tr><td>8</td><td>4 bytes (float)</td><td>KD</td></tr>
+        <tr><td>12</td><td>1 byte</td><td>SPEED</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="s11">
+  <h2><span class="num">11.</span> Configuration parameters</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Constant</th><th>Default</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>COLOR_LINEA</td><td>1 (white)</td><td>Line color: 1 = white, 0 = black</td></tr>
+        <tr><td>SPEED</td><td>100</td><td>Base motor PWM, 0–255</td></tr>
+        <tr><td>KP / KD</td><td>2 / 10</td><td>Initial gains; overwritten by autotune or EEPROM load</td></tr>
+        <tr><td>MAX_CICLOS_SIN_DETECTAR</td><td>100</td><td>Loop cycles off-line before auto-stop</td></tr>
+        <tr><td>LOOP_MS</td><td>2</td><td>Steering loop period, ms</td></tr>
+        <tr><td>RELAY_AMPLITUDE</td><td>0.5×SPEED</td><td>Autotune excitation amplitude</td></tr>
+        <tr><td>RELAY_SETTLE / MEASURE_CYCLES</td><td>3 / 6</td><td>Autotune peaks discarded / averaged</td></tr>
+        <tr><td>AUTOTUNE_SAFETY_FACTOR</td><td>0.9</td><td>Margin applied to computed gains</td></tr>
+        <tr><td>MIN_SUCTION / MAX_SUCTION</td><td>20 / 80</td><td>Turbine PWM range, 0–255</td></tr>
+        <tr><td>RAMP_STEP / RAMP_DELAY</td><td>5 / 20&nbsp;ms</td><td>Turbine PWM ramp rate</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>11.1 Empirical tuning reference</h3>
+  <p>Left in the source as author's notes for short-course runs — not applied automatically:</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Speed</th><th>KP</th><th>KD</th></tr></thead>
+      <tbody>
+        <tr><td>150</td><td>1.15</td><td>5</td></tr>
+        <tr><td>160</td><td>1.33</td><td>5.5</td></tr>
+        <tr><td>180</td><td>1.75</td><td>7.5</td></tr>
+        <tr><td>200</td><td>2</td><td>10</td></tr>
+        <tr><td>220</td><td>2.4</td><td>12</td></tr>
+        <tr><td>255</td><td>2.8</td><td>14</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="s12">
+  <h2><span class="num">12.</span> DIP switch reference</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Switch</th><th>Pin</th><th>Labeled function</th><th>Implemented?</th></tr></thead>
+      <tbody>
+        <tr><td>DIP 1</td><td>D8</td><td>Increase speed</td><td><span class="pill">defined, unused</span></td></tr>
+        <tr><td>DIP 2</td><td>D7</td><td>Increase KP/KD</td><td><span class="pill">defined, unused</span></td></tr>
+        <tr><td>DIP 3</td><td>D6</td><td>Enable turbine</td><td><span class="pill on">active</span> — checked on state-cycle button press</td></tr>
+        <tr><td>DIP 4</td><td>D4</td><td>Arm autotune</td><td><span class="pill on">active</span> — checked at boot and during idle long-press</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="s13">
+  <h2><span class="num">13.</span> Assumptions &amp; open items</h2>
+  <ul class="finding-list">
+    <li><span class="tag">Firmware — dead code</span>DIP_SW1 ("increase speed") and DIP_SW2 ("increase KP/KD") are wired and initialized as inputs but never read anywhere beyond <code>pinMode()</code> — the two switch positions currently do nothing.</li>
+    <li><span class="tag">Firmware — dead code</span><code>debug_macros.h</code> defines DBG_PRINT macros gated on <code>DEBUG==1</code>, but the header is not <code>#include</code>d by any <code>.ino</code> file.</li>
+    <li><span class="tag">Naming</span>The steering controller is P+D only (no integral term) despite being called "PID" throughout code, comments, and this repo's naming.</li>
+    <li><span class="tag">Comment vs. code</span>Autotune timeout comment says "25 s" next to a constant that is actually 2000&nbsp;ms.</li>
+    <li><span class="tag">Command asymmetry</span>Serial <code>S</code> (start) never enters Running+Turbine state, unlike the pushbutton path which honors DIP_SW3.</li>
+    <li><span class="tag">Provenance</span>Both vendored libraries (<code>src/libraries/DRV8833</code>, <code>src/libraries/ATRSensors</code>) are first-party code, not the SparkFun/Pololu libraries the same or similar names might suggest; <code>ATRSensors</code> is explicitly a modified, speed-optimized fork of Pololu's QTRSensors and retains its original CC BY-SA&nbsp;3.0 notice.</li>
+    <li><span class="tag">Unresolved</span>Exact Bluetooth module part number is not specified — J5 is a generic 4-pin header (VCC/GND/TX/RX assumed by convention).</li>
+    <li><span class="tag">Unresolved</span>No revision, author, or date metadata found in either KiCad project — board revision history is not recoverable from the files present.</li>
+  </ul>
+</section>
+
+<footer>
+  Compiled from <code>src/zopapa/zopapa.ino</code>, <code>src/zopapa/autotune.ino</code>, <code>src/zopapa/bt.ino</code>, <code>src/zopapa/turb.ino</code>, <code>src/zopapa/extras.ino</code>, <code>src/zopapa/debug_macros.h</code>, <code>src/libraries/DRV8833/DRV8833.h+.cpp</code>, <code>src/libraries/ATRSensors/ATRSensors.h+.cpp</code>, <code>hardware/main_pcb/Rapiduino.kicad_sch</code>, <code>hardware/line_sensor_pcb/ATR-8A.kicad_sch</code>.
+</footer>
+
+</div>
+</body>
+</html>
