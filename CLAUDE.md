@@ -58,7 +58,7 @@ error). Requires the user's account to be in the `dialout` group.
   every call — fixed 2026-08, previously they froze at the default
   `SPEED=100` forever, ignoring runtime speed changes.
 - Sensor calibration (min/max) persists to EEPROM (`guardarCalibracion()`/
-  `cargarCalibracion()` in `autotune.ino`); `setup()` skips the manual
+  `cargarCalibracion()` in `eeprom.ino`); `setup()` skips the manual
   3-second sweep when valid data is stored, and the `C` serial/BT command
   forces a fresh sweep on demand. Validated on hardware.
 
@@ -69,7 +69,7 @@ error). Requires the user's account to be in the `dialout` group.
   compared to a small constant like `1`. Confirmed on real hardware that a
   fresh/reused chip can already hold that exact byte from an unrelated
   prior sketch, making a single-byte check falsely report "valid" — see
-  the calibration flag in `autotune.ino` for the pattern to copy.
+  the calibration flag in `eeprom.ino` for the pattern to copy.
 - No automated test suite exists; verify firmware changes by flashing to
   the physical board and reading Serial output (see Flash above) — don't
   claim a behavioral fix works from compilation alone.
