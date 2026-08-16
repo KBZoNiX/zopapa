@@ -143,11 +143,11 @@ void autotuneRelay() {
 // Guardar los valores actuales de KP y KD en EEPROM y permite leerlos al iniciar el programa.
 // Si la EEPROM no fue inicializada carga valores por defecto.
 
-// Direcciones donde se guardan KP y KD
+// Direcciones donde se guardan el flag de inicialización, KP, KD y SPEED
 const int EEPROM_ADDR_FLAG = 0;  // Byte para indicar si está inicializada
 const int EEPROM_ADDR_KP = 4;    // KP (float ocupa 4 bytes)
 const int EEPROM_ADDR_KD = 8;    // KD (float ocupa 4 bytes)
-const int EEPROM_ADDR_SPEED = 12;    // KD (float ocupa 4 bytes)
+const int EEPROM_ADDR_SPEED = 12;    // SPEED (byte ocupa 1 byte)
 
 // Funciones para escribir valores float en EEPROM
 void eepromWriteFloat(int address, float value) {
