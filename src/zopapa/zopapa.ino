@@ -160,10 +160,16 @@ void loop() {
       // Modo autotune, toque largo en PULSADOR (>= 2000 ms) guarda los valores nuevos:
       if (digitalRead(DIP_SW4) == LOW && millis() - t0 > 2000) {
         guardarConstantesPID(KP, KD, SPEED);
-        estado = 1;
+        estado = 1;  // fuerza que, al soltar el botón, el robot quede Detenido (ver debajo del while)
         digitalWrite(LED, HIGH);
         beep(2,500,8);
         digitalWrite(LED, LOW);
+        delay(500);
+      }
+      // DIP_SW4 en HIGH (autotune no armado): toque largo (>= 2000 ms) recalibra la regleta:
+      else if (digitalRead(DIP_SW4) == HIGH && millis() - t0 > 2000) {
+        calibrarRegletaManual();
+        estado = 1;  // idem: fuerza que, al soltar el botón, el robot quede Detenido
         delay(500);
       }
     }

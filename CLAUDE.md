@@ -61,6 +61,12 @@ error). Requires the user's account to be in the `dialout` group.
   `cargarCalibracion()` in `eeprom.ino`); `setup()` skips the manual
   3-second sweep when valid data is stored, and the `C` serial/BT command
   forces a fresh sweep on demand. Validated on hardware.
+- The long-press pushbutton gesture (`zopapa.ino` `loop()`) is dual-purpose
+  via DIP_SW4: LOW saves KP/KD/SPEED to EEPROM, HIGH runs the same
+  recalibration as `C`. Both branches deliberately set `estado = 1` mid-hold
+  so the post-release logic always resolves to Stopped — that's not a bug,
+  it's how the gesture guarantees the robot never ends up driving right
+  after a long press, regardless of what state it was in beforehand.
 
 ## Conventions
 - Firmware comments and Serial output strings are in Spanish; keep new

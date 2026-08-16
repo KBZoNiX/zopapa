@@ -11,7 +11,7 @@ Full functional specification: [`docs/FSD.html`](docs/FSD.html)
 - EEPROM persistence of tuned speed/gains and sensor calibration — no need to re-sweep the line sensor on every power-cycle
 - Serial/Bluetooth command interface for live tuning and telemetry (shared UART, 9600 baud)
 - Optional turbine/vacuum subsystem for extra downforce, ramped proportionally to steering correction
-- On-board HMI: pushbutton, 4-position DIP bank, status LED, buzzer
+- On-board HMI: pushbutton (short press starts/stops; long press saves gains to EEPROM or recalibrates the sensor, depending on DIP 4 — see FSD §7.1), 4-position DIP bank, status LED, buzzer
 
 ## Repo layout
 
