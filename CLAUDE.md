@@ -61,6 +61,12 @@ error). Requires the user's account to be in the `dialout` group.
   `cargarCalibracion()` in `eeprom.ino`); `setup()` skips the manual
   3-second sweep when valid data is stored, and the `C` serial/BT command
   forces a fresh sweep on demand. Validated on hardware.
+- `calibrarRegletaManual()` (`zopapa.ino`) frees and re-nulls
+  `Regleta.calibratedMinimum`/`calibratedMaximum` before sweeping. Without
+  that, `ATRSensors::calibrate()` only resets those arrays when they're
+  `NULL` — otherwise it just widens whatever range was already loaded, so
+  a "fresh" recalibration silently became a monotonic union with the old
+  one. Confirmed on hardware by comparing two consecutive recalibrations.
 - The long-press pushbutton gesture (`zopapa.ino` `loop()`) is dual-purpose
   via DIP_SW4: LOW saves KP/KD/SPEED to EEPROM, HIGH runs the same
   recalibration as `C`. Both branches deliberately set `estado = 1` mid-hold

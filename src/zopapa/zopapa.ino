@@ -131,6 +131,20 @@ void setup() {
 // Barrido manual de 3 segundos: mover la regleta sobre la línea. Guarda el
 // resultado en EEPROM al terminar, para no repetirlo en el próximo arranque.
 void calibrarRegletaManual() {
+  // Descarta cualquier calibración ya cargada (EEPROM o un barrido previo en
+  // esta misma sesión). ATRSensors::calibrate() sólo reinicia los límites a
+  // sus valores centinela (255/0) cuando calibratedMinimum/Maximum están en
+  // NULL; si no, sólo los ensancha. Sin este reseteo, un barrido "nuevo"
+  // termina siendo una unión con el anterior en vez de reemplazarlo.
+  if (Regleta.calibratedMinimum != 0) {
+    free(Regleta.calibratedMinimum);
+    Regleta.calibratedMinimum = 0;
+  }
+  if (Regleta.calibratedMaximum != 0) {
+    free(Regleta.calibratedMaximum);
+    Regleta.calibratedMaximum = 0;
+  }
+
   Serial.println(F("Calibrar regleta..."));
   digitalWrite(LED, HIGH);
   beep(2, 100, 7);
