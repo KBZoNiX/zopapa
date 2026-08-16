@@ -13,6 +13,7 @@
  * L        Cargar parámetros     L
  * W        Guardar parámetros    W
  * Q        Probar regleta        Q
+ * C        Recalibrar regleta   C
  * H        Help!
  */
 
@@ -56,6 +57,7 @@ Serial.println(F("R        Leer parám. actuales  R"));
 Serial.println(F("L        Cargar parámetros     L"));
 Serial.println(F("W        Guardar parámetros    W"));
 Serial.println(F("Q        Probar regleta        Q"));
+Serial.println(F("C        Recalibrar regleta    C"));
 Serial.println(F("H        Help!"));
   
 }
@@ -87,6 +89,12 @@ void btProcessCommand(String cmd) {
 
     case 'Q':
       probar_regleta();
+      break;
+
+    case 'C':
+      Serial.println(F("Recalibrando regleta..."));
+      calibrarRegletaManual();
+      Serial.println(F("Calibración finalizada."));
       break;
 
     case 'S':

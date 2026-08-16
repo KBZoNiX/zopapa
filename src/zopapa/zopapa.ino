@@ -103,7 +103,34 @@ void setup() {
   motorIzq.begin();
   motorDer.begin();
 
-  // calibrar sensores: mover regleta sobre la linea.
+  // Calibración de la regleta: usa la guardada en EEPROM si existe: si no,
+  // requiere el barrido manual sobre la línea (y la guarda para la próxima).
+  if (cargarCalibracion()) {
+    Serial.println(F("Calibración cargada desde EEPROM."));
+    beep(2, 80, 7);
+  } else {
+    calibrarRegletaManual();
+  }
+
+  // Carga los valores guardados en EEPROM
+  if (EEPROM_AUTOLOAD) {
+    leerConstantesPID();
+  }
+  
+  // Entra en modo autotune
+  if (digitalRead(DIP_SW4) == LOW) {
+    confirmarInicioAutoTune();
+  }
+
+  indicar_estado(estado);
+
+}  // FIN SETUP()
+
+
+/**** CALIBRAR REGLETA (barrido manual) ***/
+// Barrido manual de 3 segundos: mover la regleta sobre la línea. Guarda el
+// resultado en EEPROM al terminar, para no repetirlo en el próximo arranque.
+void calibrarRegletaManual() {
   Serial.println(F("Calibrar regleta..."));
   digitalWrite(LED, HIGH);
   beep(2, 100, 7);
@@ -118,20 +145,9 @@ void setup() {
     }
   }
   Serial.println(F("Calibrar regleta..."));
-  
-  // Carga los valores guardados en EEPROM
-  if (EEPROM_AUTOLOAD) {
-    leerConstantesPID(); 
-  }
-  
-  // Entra en modo autotune
-  if (digitalRead(DIP_SW4) == LOW) {
-    confirmarInicioAutoTune();
-  }
 
-  indicar_estado(estado);
-
-}  // FIN SETUP()
+  guardarCalibracion();
+}  // FIN calibrarRegletaManual()
 
 
 /**** LOOP ***/
