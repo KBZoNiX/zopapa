@@ -10,7 +10,7 @@ void autotuneRelay() {
   int peakCount = 0;
 
   bool relayState = true;  // true -> +d, false -> -d
-  int d = RELAY_AMPLITUDE;
+  int d = relayAmplitude();
   
   Serial.println(F(">>> AUTOTUNE START (relay method)"));
   Serial.print(F("Relay amplitude (d) = "));

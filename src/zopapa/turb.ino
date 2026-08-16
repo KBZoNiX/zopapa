@@ -23,7 +23,7 @@ void pararTurbina() {
 void actualizarTurbina(int correction) {
   
   // Asigna la velocidad de la turbina a un valor proporcional a la corrección detectada (mayor corrección mayor velocidad turbina)
-  targetSuction = map(abs(correction), 0, MAX_CORRECTION, MIN_SUCTION, MAX_SUCTION);
+  targetSuction = map(abs(correction), 0, maxCorrection(), MIN_SUCTION, MAX_SUCTION);
 
   // Rampa suave hacia targetSuction
   if (currentSuction < targetSuction) {

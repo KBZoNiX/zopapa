@@ -31,7 +31,11 @@ float KP = 2 ;         // gains iniciales (serán sobrescritos por autotune si s
 float KD = 10 ;
 
 
-const int MAX_CORRECTION = SPEED * 2;  // Limita la corrección máxima
+// Limita la corrección máxima. Función (no const) porque SPEED puede cambiar
+// en tiempo de ejecución (comando 'V', carga de EEPROM, autotune guardado).
+int maxCorrection() {
+  return SPEED * 2;
+}
 
 
 // Pines del Arduino utilizados
@@ -66,8 +70,12 @@ int ciclos_sin_detectar = 0;
 
 
 /*** Autotune parameters ***/
-// Amplitud de relé (magnitud de la corrección aplicada durante la prueba)
-const int RELAY_AMPLITUDE = SPEED * 0.5;   // ajustar según tu rango de corrección
+// Amplitud de relé (magnitud de la corrección aplicada durante la prueba).
+// Función (no const): debe reflejar el SPEED vigente al momento de ejecutar
+// el autotune, no el valor por defecto con el que arrancó el sketch.
+int relayAmplitude() {
+  return SPEED * 0.5;
+}
 const int RELAY_SETTLE_CYCLES = 3;                // ciclos descartados (de estabilización)
 const int RELAY_MEASURE_CYCLES = 6;               // ciclos usados para cálculo
 const float AUTOTUNE_SAFETY_FACTOR = 0.9;         // Factor de seguridad para las constantes calculadas (Factor < 1 → más conservador / Factor = 1 → más agresivo)
@@ -200,11 +208,11 @@ void correr(void) {
 
   // Aplico la corrección:
   if (correccion_pid > 0) {
-    correccion_pid = min(correccion_pid, MAX_CORRECTION);
+    correccion_pid = min(correccion_pid, maxCorrection());
     motorIzq.speed(SPEED);
     motorDer.speed(SPEED - correccion_pid);
   } else {
-    correccion_pid = max(correccion_pid, -MAX_CORRECTION);
+    correccion_pid = max(correccion_pid, -maxCorrection());
     motorIzq.speed(SPEED + correccion_pid);
     motorDer.speed(SPEED);
   }
