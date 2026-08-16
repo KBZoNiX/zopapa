@@ -249,7 +249,7 @@
 <div class="page">
 
 <header class="doc-head">
-  <p class="eyebrow">Functional Specification Document · Rev E (derived)</p>
+  <p class="eyebrow">Functional Specification Document · Rev F (derived)</p>
   <h1>ZOPAPA <span>/ FSD</span></h1>
   <p class="subtitle">Two-wheel differential-drive line-following robot — Arduino Nano controller, 8-channel reflectance sensor array, PD steering with relay-method autotune.</p>
   <div class="meta-row">
@@ -500,12 +500,13 @@
 
 <section id="s6">
   <h2><span class="num">6.</span> Firmware architecture</h2>
-  <p>Seven sketch files in <code>src/zopapa/</code>, compiled together as one Arduino sketch (all <code>.ino</code> files in a sketch folder share one translation unit), plus two vendored libraries under <code>src/libraries/</code> — both first-party code by Mauricio Venanzoni, not the SparkFun/Pololu libraries of the same or similar names.</p>
+  <p>Eight sketch files in <code>src/zopapa/</code>, compiled together as one Arduino sketch (all <code>.ino</code> files in a sketch folder share one translation unit), plus two vendored libraries under <code>src/libraries/</code> — both first-party code by Mauricio Venanzoni, not the SparkFun/Pololu libraries of the same or similar names.</p>
   <div class="table-wrap">
     <table>
       <thead><tr><th>File</th><th>Responsibility</th></tr></thead>
       <tbody>
-        <tr><td>zopapa.ino</td><td>Entry point: config constants, pin setup, calibration sequence (<code>calibrarRegletaManual()</code>), top-level state machine (<code>loop()</code>), core steering loop (<code>correr()</code>), status feedback</td></tr>
+        <tr><td>zopapa.ino</td><td>Entry point: config constants, pin setup, calibration sequence (<code>calibrarRegletaManual()</code>), top-level state machine (<code>setup()</code>/<code>loop()</code>), status feedback</td></tr>
+        <tr><td>steering.ino</td><td>Core steering loop (<code>correr()</code>) — see §7.3</td></tr>
         <tr><td>autotune.ino</td><td>Relay-feedback (Åström–Hägglund) autotune algorithm; autotune arm-and-confirm flow</td></tr>
         <tr><td>eeprom.ino</td><td>EEPROM persistence for KP/KD/SPEED and for sensor calibration bounds — see §10</td></tr>
         <tr><td>bt.ino</td><td>Serial/Bluetooth command parser and dispatcher; sensor bar test mode</td></tr>
@@ -682,7 +683,7 @@
 </section>
 
 <footer>
-  Compiled from <code>src/zopapa/zopapa.ino</code>, <code>src/zopapa/autotune.ino</code>, <code>src/zopapa/eeprom.ino</code>, <code>src/zopapa/bt.ino</code>, <code>src/zopapa/turb.ino</code>, <code>src/zopapa/extras.ino</code>, <code>src/zopapa/debug_macros.h</code>, <code>src/libraries/DRV8833/DRV8833.h+.cpp</code>, <code>src/libraries/ATRSensors/ATRSensors.h+.cpp</code>, <code>hardware/main_pcb/Rapiduino.kicad_sch</code>, <code>hardware/line_sensor_pcb/ATR-8A.kicad_sch</code>.
+  Compiled from <code>src/zopapa/zopapa.ino</code>, <code>src/zopapa/steering.ino</code>, <code>src/zopapa/autotune.ino</code>, <code>src/zopapa/eeprom.ino</code>, <code>src/zopapa/bt.ino</code>, <code>src/zopapa/turb.ino</code>, <code>src/zopapa/extras.ino</code>, <code>src/zopapa/debug_macros.h</code>, <code>src/libraries/DRV8833/DRV8833.h+.cpp</code>, <code>src/libraries/ATRSensors/ATRSensors.h+.cpp</code>, <code>hardware/main_pcb/Rapiduino.kicad_sch</code>, <code>hardware/line_sensor_pcb/ATR-8A.kicad_sch</code>.
 </footer>
 
 </div>
