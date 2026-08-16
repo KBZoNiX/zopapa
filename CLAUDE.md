@@ -57,8 +57,19 @@ error). Requires the user's account to be in the `dialout` group.
   `MAX_CORRECTION`/`RELAY_AMPLITUDE` consts) recompute from `SPEED` on
   every call — fixed 2026-08, previously they froze at the default
   `SPEED=100` forever, ignoring runtime speed changes.
+- Sensor calibration (min/max) persists to EEPROM (`guardarCalibracion()`/
+  `cargarCalibracion()` in `autotune.ino`); `setup()` skips the manual
+  3-second sweep when valid data is stored, and the `C` serial/BT command
+  forces a fresh sweep on demand. Validated on hardware.
 
 ## Conventions
 - Firmware comments and Serial output strings are in Spanish; keep new
   comments consistent with that unless told otherwise.
-- No test suite exists.
+- EEPROM validity flags: use a multi-byte magic marker, not a single byte
+  compared to a small constant like `1`. Confirmed on real hardware that a
+  fresh/reused chip can already hold that exact byte from an unrelated
+  prior sketch, making a single-byte check falsely report "valid" — see
+  the calibration flag in `autotune.ino` for the pattern to copy.
+- No automated test suite exists; verify firmware changes by flashing to
+  the physical board and reading Serial output (see Flash above) — don't
+  claim a behavioral fix works from compilation alone.

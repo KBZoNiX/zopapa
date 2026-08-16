@@ -249,7 +249,7 @@
 <div class="page">
 
 <header class="doc-head">
-  <p class="eyebrow">Functional Specification Document · Rev C (derived)</p>
+  <p class="eyebrow">Functional Specification Document · Rev D (derived)</p>
   <h1>ZOPAPA <span>/ FSD</span></h1>
   <p class="subtitle">Two-wheel differential-drive line-following robot — Arduino Nano controller, 8-channel reflectance sensor array, PD steering with relay-method autotune.</p>
   <div class="meta-row">
@@ -287,7 +287,7 @@
 
 <section id="s2">
   <h2><span class="num">2.</span> System overview</h2>
-  <p>The robot is a two-wheel differential-drive platform that follows a black or white line using an 8-sensor reflectance array, correcting heading with a proportional–derivative control loop (labeled "PID" throughout the code and comments, though no integral term is implemented — see 7.3). An optional turbine/fan subsystem adds downforce at speed. Live tuning and telemetry run over a single UART shared by USB and an onboard Bluetooth header. A relay-feedback (Åström–Hägglund) routine can auto-compute the PD gains, which persist to EEPROM on operator command.</p>
+  <p>The robot is a two-wheel differential-drive platform that follows a black or white line using an 8-sensor reflectance array, correcting heading with a proportional–derivative control loop (labeled "PID" throughout the code and comments, though no integral term is implemented — see 7.3). An optional turbine/fan subsystem adds downforce at speed. Live tuning and telemetry run over a single UART shared by USB and an onboard Bluetooth header. A relay-feedback (Åström–Hägglund) routine can auto-compute the PD gains, which persist to EEPROM on operator command; sensor calibration also persists to EEPROM automatically, so the manual calibration sweep is only needed once per sensor/track setup rather than on every power-cycle.</p>
 
   <figure class="diagram">
     <svg viewBox="0 0 900 560" role="img" aria-label="System block diagram: battery, sensor array, HMI and Bluetooth/serial all connect to the main PCB hub, which drives the left motor, right motor and turbine.">
@@ -543,7 +543,7 @@
   <p>A short press of the pushbutton cycles Stopped → Running (or Running+Turbine, if DIP_SW3 reads LOW at the moment of the press) → Stopped. Holding the button ≥2&nbsp;s while DIP_SW4 is LOW instead <strong>saves</strong> the current KP/KD/SPEED to EEPROM and forces Running state — it does not launch autotune itself (that only happens at boot, or via the <code>T</code> serial command).</p>
 
   <h3>7.2 Startup &amp; calibration</h3>
-  <p>On reset: beep/LED intro, then a fixed 3-second manual calibration window (sensor bar min/max learning) during which the operator sweeps the array across the line. If <code>EEPROM_AUTOLOAD</code> is set, saved KP/KD/SPEED load from EEPROM. If DIP_SW4 reads LOW, a 5-second window opens for a button press to launch autotune before falling through to normal Stopped state.</p>
+  <p>On reset: if a valid sensor calibration is stored in EEPROM (§10), it loads directly and the boot continues immediately. Otherwise, a beep/LED intro is followed by a fixed 3-second manual calibration window (sensor bar min/max learning) during which the operator sweeps the array across the line — the result is then saved to EEPROM so the sweep isn't needed again next boot. The <code>C</code> serial command (§9) forces a fresh sweep on demand at any later point. If <code>EEPROM_AUTOLOAD</code> is set, saved KP/KD/SPEED also load from EEPROM (independently of the calibration data). If DIP_SW4 reads LOW, a 5-second window opens for a button press to launch autotune before falling through to normal Stopped state.</p>
 
   <h3>7.3 Steering control loop</h3>
   <p>Runs every <code>LOOP_MS</code> = 2&nbsp;ms. Line position is read as <code>centro_de_linea − Regleta.readLine()</code>, where <code>centro_de_linea</code> = 350 for 8 sensors (range roughly −350…+350). Correction is:</p>
@@ -588,6 +588,7 @@
         <tr><td><code>L</code></td><td>Load parameters from EEPROM</td><td><code>L</code></td></tr>
         <tr><td><code>W</code></td><td>Save parameters to EEPROM</td><td><code>W</code></td></tr>
         <tr><td><code>Q</code></td><td>Live sensor bar test (raw readings)</td><td><code>Q</code></td></tr>
+        <tr><td><code>C</code></td><td>Force a fresh sensor calibration sweep, then save it</td><td><code>C</code></td></tr>
         <tr><td><code>H</code></td><td>Print command help</td><td><code>H</code></td></tr>
       </tbody>
     </table>
@@ -601,13 +602,17 @@
     <table>
       <thead><tr><th>Address</th><th>Size</th><th>Content</th></tr></thead>
       <tbody>
-        <tr><td>0</td><td>1 byte</td><td>Init flag (1 = valid data present)</td></tr>
+        <tr><td>0</td><td>1 byte</td><td>PID init flag (1 = KP/KD/SPEED below are valid)</td></tr>
+        <tr><td>1–2</td><td>2 bytes</td><td>Calibration magic marker (0xC1 0xB8 = calibration data below is valid)</td></tr>
         <tr><td>4</td><td>4 bytes (float)</td><td>KP</td></tr>
         <tr><td>8</td><td>4 bytes (float)</td><td>KD</td></tr>
         <tr><td>12</td><td>1 byte</td><td>SPEED</td></tr>
+        <tr><td>16–23</td><td>8 bytes</td><td>Sensor calibration minimums, one per channel</td></tr>
+        <tr><td>24–31</td><td>8 bytes</td><td>Sensor calibration maximums, one per channel</td></tr>
       </tbody>
     </table>
   </div>
+  <div class="note"><b>Why a 2-byte marker, not a single flag byte</b> The PID flag at address 0 uses a plain <code>== 1</code> check, matching the original design. The calibration flag deliberately doesn't: on the test hardware, address 1 already held <code>0x01</code> from data left over by a prior sketch, which would have made a single-byte check falsely report "valid" and load garbage as real sensor calibration. A 2-byte fixed marker makes that kind of accidental collision with pre-existing EEPROM content far less likely.</div>
 </section>
 
 <section id="s11">

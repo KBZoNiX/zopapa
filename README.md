@@ -8,7 +8,7 @@ Full functional specification: [`docs/FSD.html`](docs/FSD.html)
 
 - PD line-following control loop (proportional + derivative, ~500 Hz)
 - Relay-feedback (Åström–Hägglund) autotune — computes and installs new gains from an induced oscillation
-- EEPROM persistence of tuned speed/gains
+- EEPROM persistence of tuned speed/gains and sensor calibration — no need to re-sweep the line sensor on every power-cycle
 - Serial/Bluetooth command interface for live tuning and telemetry (shared UART, 9600 baud)
 - Optional turbine/vacuum subsystem for extra downforce, ramped proportionally to steering correction
 - On-board HMI: pushbutton, 4-position DIP bank, status LED, buzzer
@@ -58,6 +58,7 @@ Sent over Serial or Bluetooth (same UART, 9600 baud):
 | `L` | Load parameters from EEPROM | `L` |
 | `W` | Save parameters to EEPROM | `W` |
 | `Q` | Live sensor bar test | `Q` |
+| `C` | Force a fresh sensor calibration sweep, then save it | `C` |
 | `H` | Help | `H` |
 
 See [`docs/FSD.html`](docs/FSD.html) for the full electrical interconnect, BOM, control-loop math, and known quirks.
@@ -66,3 +67,7 @@ See [`docs/FSD.html`](docs/FSD.html) for the full electrical interconnect, BOM, 
 
 - Firmware comments and Serial output are in Spanish.
 - No test suite.
+
+## License
+
+[MIT](LICENSE), except `src/libraries/ATRSensors`, which retains the CC BY-SA 3.0 notice of the Pololu QTRSensors code it's derived from (see the file header).
