@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zopapa Manual</title>
+<style>
+  :root{
+    --bg:#f1f3ee;
+    --surface:#ffffff;
+    --surface-alt:#e7ebe1;
+    --ink:#1b211c;
+    --ink-dim:#5c665d;
+    --accent:#2f6f4e;
+    --accent-soft:#dfe9e0;
+    --accent-2:#a8702f;
+    --accent-2-soft:#f1e6d5;
+    --border:#d7ddd0;
+    --code-bg:#e9ede2;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Consolas, "Liberation Mono", monospace;
+    --font-body: Optima, Candara, "Noto Sans", "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#121614;
+      --surface:#171c19;
+      --surface-alt:#1e2420;
+      --ink:#e7ece5;
+      --ink-dim:#96a498;
+      --accent:#63cc90;
+      --accent-soft:#1b2b21;
+      --accent-2:#dba05a;
+      --accent-2-soft:#2c2317;
+      --border:#2b332c;
+      --code-bg:#1b211d;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#121614;
+    --surface:#171c19;
+    --surface-alt:#1e2420;
+    --ink:#e7ece5;
+    --ink-dim:#96a498;
+    --accent:#63cc90;
+    --accent-soft:#1b2b21;
+    --accent-2:#dba05a;
+    --accent-2-soft:#2c2317;
+    --border:#2b332c;
+    --code-bg:#1b211d;
+  }
+
+  *{box-sizing:border-box;}
+  html{background:var(--bg);}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.65;
+    font-size:16px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:820px;margin:0 auto;padding:64px 26px 140px;}
+
+  code{
+    font-family:var(--font-mono);
+    background:var(--code-bg);
+    padding:1px 5px;
+    border-radius:3px;
+    font-size:0.86em;
+    color:var(--accent);
+    white-space:nowrap;
+  }
+
+  header.doc-head{border-bottom:3px double var(--border);padding-bottom:22px;margin-bottom:8px;}
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:0.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin:0 0 14px;
+  }
+  h1{
+    font-family:var(--font-mono);
+    font-size:clamp(2rem,6vw,2.7rem);
+    letter-spacing:.01em;
+    margin:0 0 6px;
+    text-wrap:balance;
+    color:var(--ink);
+  }
+  h1 span{color:var(--accent);}
+  .subtitle{
+    font-size:1.08rem;
+    color:var(--ink-dim);
+    margin:0 0 20px;
+    max-width:56ch;
+  }
+  .meta-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 22px;
+    font-family:var(--font-mono);
+    font-size:0.76rem;
+    color:var(--ink-dim);
+  }
+  .meta-row b{color:var(--ink);font-weight:600;}
+
+  nav.toc{
+    margin:36px 0 8px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:20px 24px;
+  }
+  nav.toc .eyebrow{margin-bottom:10px;}
+  nav.toc ol{
+    columns:2;
+    column-gap:32px;
+    list-style:none;
+    margin:0;
+    padding:0;
+    font-size:0.9rem;
+  }
+  nav.toc li{break-inside:avoid;margin-bottom:7px;}
+  nav.toc a{color:var(--ink);text-decoration:none;display:flex;gap:8px;}
+  nav.toc a:hover{color:var(--accent);}
+  nav.toc a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  nav.toc .n{font-family:var(--font-mono);color:var(--ink-dim);min-width:1.6em;}
+
+  section{margin-top:56px;}
+  h2{
+    font-family:var(--font-mono);
+    font-size:1rem;
+    text-transform:uppercase;
+    letter-spacing:.07em;
+    color:var(--accent);
+    border-bottom:1px solid var(--border);
+    padding-bottom:10px;
+    margin:0 0 20px;
+    display:flex;
+    gap:12px;
+    align-items:baseline;
+    scroll-margin-top:20px;
+  }
+  h2 .num{color:var(--ink-dim);font-weight:400;}
+  h3{
+    font-family:var(--font-mono);
+    font-size:0.92rem;
+    color:var(--ink);
+    margin:30px 0 10px;
+    scroll-margin-top:20px;
+  }
+  p{margin:0 0 14px;max-width:68ch;}
+  ul{margin:0 0 14px;padding-left:1.3em;max-width:66ch;}
+  li{margin-bottom:5px;}
+  strong{color:var(--ink);}
+
+  .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:6px;margin:0 0 18px;}
+  table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:0.82rem;font-variant-numeric:tabular-nums;background:var(--surface);}
+  th{
+    text-align:left;
+    font-weight:600;
+    color:var(--ink-dim);
+    text-transform:uppercase;
+    font-size:0.66rem;
+    letter-spacing:.06em;
+    border-bottom:2px solid var(--accent);
+    padding:9px 12px;
+    white-space:nowrap;
+  }
+  td{padding:7px 12px;border-bottom:1px solid var(--border);vertical-align:top;font-family:var(--font-body);font-size:0.92rem;}
+  td code{font-size:0.86em;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:nth-child(even) td{background:var(--surface-alt);}
+
+  .note{
+    border-left:3px solid var(--accent-2);
+    background:var(--accent-2-soft);
+    padding:11px 16px;
+    border-radius:0 6px 6px 0;
+    font-size:0.9rem;
+    margin:0 0 16px;
+    max-width:66ch;
+  }
+  .note b{color:var(--accent-2);font-family:var(--font-mono);font-size:0.72rem;letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:4px;}
+
+  /* Pasos numerados: la secuencia de uso es real (arrancar, calibrar, etc.),
+     así que la numeración aporta información, no es decorativa. */
+  ol.steps{list-style:none;margin:0 0 18px;padding:0;counter-reset:step;}
+  ol.steps li{
+    counter-increment:step;
+    display:flex;
+    gap:16px;
+    padding:14px 0;
+    border-bottom:1px solid var(--border);
+  }
+  ol.steps li:last-child{border-bottom:none;}
+  ol.steps li::before{
+    content:counter(step);
+    font-family:var(--font-mono);
+    font-weight:700;
+    font-size:0.9rem;
+    color:var(--accent);
+    background:var(--accent-soft);
+    width:28px;
+    height:28px;
+    min-width:28px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  ol.steps .step-body p{margin:0;}
+  ol.steps .step-title{font-weight:600;color:var(--ink);display:block;margin-bottom:3px;}
+
+  .pill{
+    display:inline-block;
+    font-family:var(--font-mono);
+    font-size:0.7rem;
+    padding:2px 9px;
+    border-radius:20px;
+    border:1px solid var(--border);
+    color:var(--ink-dim);
+  }
+  .pill.on{color:var(--accent);border-color:var(--accent);background:var(--accent-soft);}
+  .pill.off{color:var(--ink-dim);}
+
+  /* Tarjeta de referencia rápida */
+  .cheat{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:22px 26px;
+  }
+  .cheat h3{margin-top:0;}
+  .cheat-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px 28px;}
+  @media (max-width:600px){.cheat-grid{grid-template-columns:1fr;}}
+  .cheat-grid dt{font-family:var(--font-mono);font-size:0.72rem;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+  .cheat-grid dd{margin:0 0 12px;font-size:0.88rem;}
+
+  footer{margin-top:80px;padding-top:20px;border-top:1px solid var(--border);font-size:0.76rem;color:var(--ink-dim);font-family:var(--font-mono);}
+  a{color:var(--accent);}
+  ::selection{background:var(--accent);color:var(--surface);}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<header class="doc-head">
+  <p class="eyebrow">Manual de Usuario · Rev A</p>
+  <h1>ZOPAPA <span>/ Manual</span></h1>
+  <p class="subtitle">Controles físicos y comandos por Bluetooth / puerto serie del robot seguidor de línea.</p>
+  <div class="meta-row">
+    <span><b>Idioma</b> Español</span>
+    <span><b>Alcance</b> Uso diario: encendido, calibración, controles, comandos</span>
+    <span><b>Referencia técnica completa</b> <code>docs/FSD.html</code></span>
+  </div>
+</header>
+
+<nav class="toc">
+  <p class="eyebrow">Contenido</p>
+  <ol>
+    <li><a href="#s1"><span class="n">1</span> Antes de arrancar</a></li>
+    <li><a href="#s2"><span class="n">2</span> Controles físicos</a></li>
+    <li><a href="#s3"><span class="n">3</span> Uso típico paso a paso</a></li>
+    <li><a href="#s4"><span class="n">4</span> Ajuste automático (AutoTune)</a></li>
+    <li><a href="#s5"><span class="n">5</span> Comandos por Bluetooth / Serie</a></li>
+    <li><a href="#s6"><span class="n">6</span> Preguntas frecuentes</a></li>
+    <li><a href="#s7"><span class="n">7</span> Referencia rápida</a></li>
+  </ol>
+</nav>
+
+<section id="s1">
+  <h2><span class="num">1.</span> Antes de arrancar</h2>
+  <p>Zopapa sigue una línea negra o blanca con una regleta de 8 sensores, y puede ajustar y guardar solo su propia calibración y sus parámetros de manejo (velocidad y ganancias) — no requiere una computadora para el uso diario, sólo para ajustes avanzados.</p>
+  <p>Al encender el robot con el interruptor principal, ocurre una de estas dos cosas:</p>
+  <ul>
+    <li><strong>Si ya hay una calibración guardada</strong> de una sesión anterior, el robot la carga al instante (2 bips cortos) y queda listo para usar.</li>
+    <li><strong>Si no hay ninguna calibración guardada</strong> (primer uso, o después de un reinicio de fábrica), el robot pide un barrido manual: durante 3 segundos, con bips rápidos y el LED indicando que está "escuchando", hay que <strong>mover la regleta de sensores sobre la línea</strong> (de lado a lado, cruzándola varias veces) para que aprenda el contraste entre la línea y la superficie. Al terminar, guarda el resultado automáticamente — no hace falta repetir este paso en el próximo encendido.</li>
+  </ul>
+  <div class="note"><b>Cuándo repetir la calibración</b> Si cambia la pista, la iluminación del lugar, o la superficie, conviene recalibrar (sección 2.2 y 5) antes de correr — una calibración vieja puede hacer que el robot pierda la línea o reaccione de forma errática.</div>
+</section>
+
+<section id="s2">
+  <h2><span class="num">2.</span> Controles físicos</h2>
+
+  <h3>2.1 Interruptor de encendido</h3>
+  <p>Corta o conecta la alimentación de toda la placa. Al encender, el robot queda <strong>Detenido</strong> (motores y turbina apagados) hasta la primera pulsación del botón principal.</p>
+
+  <h3>2.2 Pulsador principal</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Acción</th><th>Condición</th><th>Efecto</th></tr></thead>
+      <tbody>
+        <tr><td>Toque corto</td><td>Robot Detenido</td><td>Arranca. Si la llave DIP 3 está activada en ese instante, arranca además con la turbina.</td></tr>
+        <tr><td>Toque corto</td><td>Robot en marcha</td><td>Detiene el robot.</td></tr>
+        <tr><td>Toque largo (mantener ≥2&nbsp;s)</td><td>Llave DIP 4 <span class="pill on">activada</span></td><td>Guarda en memoria la velocidad y ganancias (KP/KD) actuales. El robot queda Detenido al soltar.</td></tr>
+        <tr><td>Toque largo (mantener ≥2&nbsp;s)</td><td>Llave DIP 4 <span class="pill off">desactivada</span></td><td>Repite el barrido de calibración de la regleta (igual que el comando <code>C</code>, sección 5). El robot queda Detenido al soltar.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note"><b>El toque largo siempre termina Detenido</b> Sea cual sea el estado del robot antes de mantener presionado el botón 2 segundos o más, al soltarlo queda Detenido — nunca arranca solo por haber hecho un toque largo.</div>
+
+  <h3>2.3 Llave DIP (4 posiciones)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Posición</th><th>Función</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><span class="pill">sin función</span> Reservada; actualmente no hace nada.</td></tr>
+        <tr><td>2</td><td><span class="pill">sin función</span> Reservada; actualmente no hace nada.</td></tr>
+        <tr><td>3</td><td>Activada: al arrancar con un toque corto, el robot enciende también la turbina de succión (velocidad proporcional a cuánto está corrigiendo el rumbo). Desactivada: arranca sin turbina.</td></tr>
+        <tr><td>4</td><td>Doble función según el momento: <strong>al encender el robot</strong>, activada abre una ventana de 5&nbsp;s para arrancar el AutoTune con el pulsador (sección 4); <strong>durante un toque largo del pulsador</strong>, activada guarda velocidad/ganancias y desactivada recalibra la regleta (ver 2.2).</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>2.4 Señales del LED y el zumbador</h3>
+  <p>El robot no tiene pantalla: toda la retroalimentación es sonora (bips) o con el LED. Esta es la referencia completa:</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Señal</th><th>Significa</th></tr></thead>
+      <tbody>
+        <tr><td>1 bip corto + LED encendido (fijo)</td><td>El robot arrancó (marcha normal o con turbina).</td></tr>
+        <tr><td>3 bips cortos + LED apagado</td><td>El robot se detuvo.</td></tr>
+        <tr><td>2 bips cortos</td><td>Calibración cargada desde la memoria (se saltó el barrido manual).</td></tr>
+        <tr><td>2 bips + bips rápidos durante ~3&nbsp;s</td><td>Barrido de calibración en curso — mover la regleta sobre la línea ahora.</td></tr>
+        <tr><td>2 bips largos, repitiéndose mientras se mantiene el botón</td><td>Guardando velocidad/ganancias en memoria (toque largo, DIP 4 activada).</td></tr>
+        <tr><td>5 bips largos</td><td>Arrancando el AutoTune.</td></tr>
+        <tr><td>2 bips cortos (al final del AutoTune)</td><td>AutoTune terminado con éxito — resultado sólo en memoria, ver sección 4.</td></tr>
+        <tr><td>1 bip largo</td><td>AutoTune falló (no detectó suficiente oscilación).</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="s3">
+  <h2><span class="num">3.</span> Uso típico paso a paso</h2>
+  <ol class="steps">
+    <li>
+      <div class="step-body">
+        <span class="step-title">Ubicar el robot sobre la pista</span>
+        <p>Apoyar la regleta de sensores sobre o cerca de la línea antes de encender, si se va a hacer un barrido de calibración.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-body">
+        <span class="step-title">Encender</span>
+        <p>Con el interruptor principal. Esperar la secuencia de arranque (sección 1) — 2 bips si cargó calibración guardada, o el barrido de 3&nbsp;s si no.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-body">
+        <span class="step-title">(Opcional) Ajustar la llave DIP 3</span>
+        <p>Activarla antes de arrancar si se quiere usar la turbina en esta corrida.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-body">
+        <span class="step-title">Arrancar</span>
+        <p>Toque corto del pulsador. El robot debería seguir la línea de inmediato.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-body">
+        <span class="step-title">Detener</span>
+        <p>Toque corto del pulsador en cualquier momento. El robot también se detiene solo si pierde la línea por más de un instante (parada de seguridad).</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-body">
+        <span class="step-title">(Si hace falta) Recalibrar</span>
+        <p>Con el robot Detenido: toque largo (≥2&nbsp;s) con la llave DIP 4 desactivada, o el comando <code>C</code> por Bluetooth/Serie.</p>
+      </div>
+    </li>
+  </ol>
+</section>
+
+<section id="s4">
+  <h2><span class="num">4.</span> Ajuste automático (AutoTune)</h2>
+  <p>El AutoTune calcula automáticamente las ganancias de corrección (KP/KD) haciendo oscilar al robot sobre la línea y midiendo la respuesta. Se puede iniciar de dos formas:</p>
+  <ul>
+    <li><strong>Al encender:</strong> con la llave DIP 4 activada, el robot abre una ventana de 5&nbsp;s (avisando por el puerto serie) para presionar el pulsador y arrancarlo.</li>
+    <li><strong>En cualquier momento, por Bluetooth/Serie:</strong> con el comando <code>T</code> (sección 5).</li>
+  </ul>
+  <p>Durante la prueba (hasta 2&nbsp;s) el robot corrige de un lado a otro de forma controlada — es recomendable hacerlo con el robot sobre una guía recta o con las ruedas levantadas la primera vez. Al terminar con éxito (2 bips cortos), instala las nuevas ganancias — pero <strong>sólo en memoria de trabajo</strong>.</p>
+  <div class="note"><b>El resultado del AutoTune no se guarda solo</b> Para que las ganancias calculadas sobrevivan a un apagado, hay que guardarlas explícitamente: toque largo del pulsador con la llave DIP 4 activada, o el comando <code>W</code> por Bluetooth/Serie.</div>
+</section>
+
+<section id="s5">
+  <h2><span class="num">5.</span> Comandos por Bluetooth / Serie</h2>
+  <p>El robot acepta comandos de texto por el mismo puerto que se usa para programarlo por USB, y por el módulo Bluetooth conectado a la placa — cualquiera de los dos sirve, con los mismos comandos. Velocidad: <strong>9600 baudios</strong>. Cada comando se envía terminado en Enter (nueva línea).</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Comando</th><th>Función</th><th>Ejemplo</th></tr></thead>
+      <tbody>
+        <tr><td><code>S</code></td><td>Arrancar (marcha normal — no activa la turbina aunque la llave DIP 3 esté activada)</td><td><code>S</code></td></tr>
+        <tr><td><code>P</code></td><td>Detener</td><td><code>P</code></td></tr>
+        <tr><td><code>T</code></td><td>Ejecutar AutoTune</td><td><code>T</code></td></tr>
+        <tr><td><code>Vxxx</code></td><td>Ajustar velocidad (0–255)</td><td><code>V180</code></td></tr>
+        <tr><td><code>Kxxx</code></td><td>Ajustar ganancia KP</td><td><code>K22.5</code></td></tr>
+        <tr><td><code>Dxxx</code></td><td>Ajustar ganancia KD</td><td><code>D15.3</code></td></tr>
+        <tr><td><code>R</code></td><td>Leer velocidad y ganancias actuales</td><td><code>R</code></td></tr>
+        <tr><td><code>L</code></td><td>Cargar velocidad/ganancias guardadas en memoria</td><td><code>L</code></td></tr>
+        <tr><td><code>W</code></td><td>Guardar la velocidad/ganancias actuales en memoria</td><td><code>W</code></td></tr>
+        <tr><td><code>Q</code></td><td>Modo prueba: muestra continuamente la lectura cruda de los 8 sensores. Para salir, presionar el pulsador físico.</td><td><code>Q</code></td></tr>
+        <tr><td><code>C</code></td><td>Recalibrar la regleta (barrido de 3&nbsp;s, igual que el toque largo con DIP 4 desactivada)</td><td><code>C</code></td></tr>
+        <tr><td><code>H</code></td><td>Mostrar la lista de comandos</td><td><code>H</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note"><b>La mayoría de los comandos sólo se procesan con el robot Detenido</b> Mientras está en marcha, el único comando que se acepta es <code>P</code> (Detener), por seguridad — los demás se ignoran hasta detenerlo.</div>
+</section>
+
+<section id="s6">
+  <h2><span class="num">6.</span> Preguntas frecuentes</h2>
+  <h3>El robot se detiene solo apenas arranca</h3>
+  <p>Es la parada de seguridad por pérdida de línea: si la regleta no detecta la línea por un instante prolongado, el robot se detiene solo. Suele deberse a una calibración desactualizada — recalibrar (sección 2.2 o comando <code>C</code>) suele resolverlo.</p>
+  <h3>Cambié la velocidad con <code>V</code> pero no vi el efecto esperado en las curvas</h3>
+  <p>La velocidad y las ganancias trabajan juntas — si se cambia mucho la velocidad sin volver a ajustar KP/KD (manualmente o con AutoTune), la corrección puede quedar desproporcionada para la nueva velocidad.</p>
+  <h3>Las posiciones 1 y 2 de la llave DIP no parecen hacer nada</h3>
+  <p>Es correcto — están reservadas para uso futuro, pero el firmware actual no las usa.</p>
+  <h3>¿Cómo sé si el AutoTune guardó los resultados?</h3>
+  <p>No lo hace automáticamente (sección 4). Usar <code>R</code> por Bluetooth/Serie para ver las ganancias vigentes, y <code>W</code> (o el toque largo con DIP 4 activada) para guardarlas.</p>
+</section>
+
+<section id="s7">
+  <h2><span class="num">7.</span> Referencia rápida</h2>
+  <div class="cheat">
+    <h3>Tarjeta resumen</h3>
+    <dl class="cheat-grid">
+      <dt>Arrancar / Detener</dt>
+      <dd>Toque corto del pulsador</dd>
+      <dt>Guardar velocidad/ganancias</dt>
+      <dd>Toque largo (≥2&nbsp;s) · DIP 4 activada</dd>
+      <dt>Recalibrar regleta</dt>
+      <dd>Toque largo (≥2&nbsp;s) · DIP 4 desactivada — o comando <code>C</code></dd>
+      <dt>Activar turbina en el próximo arranque</dt>
+      <dd>DIP 3 activada antes del toque corto</dd>
+      <dt>Arrancar AutoTune al encender</dt>
+      <dd>DIP 4 activada al encender, luego pulsador dentro de 5&nbsp;s</dd>
+      <dt>Arrancar AutoTune en cualquier momento</dt>
+      <dd>Comando <code>T</code></dd>
+      <dt>Guardar resultado del AutoTune</dt>
+      <dd>Comando <code>W</code> o toque largo con DIP 4 activada</dd>
+      <dt>Ver parámetros actuales</dt>
+      <dd>Comando <code>R</code></dd>
+    </dl>
+  </div>
+</section>
+
+<footer>
+  Basado en el firmware en <code>src/zopapa/</code> (Rev correspondiente a <code>docs/FSD.html</code> Rev H). Para el detalle técnico completo — electrónica, algoritmo de control, mapa de EEPROM — ver <code>docs/FSD.html</code>.
+</footer>
+
+</div>
+</body>
+</html>

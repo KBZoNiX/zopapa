@@ -2,7 +2,7 @@
 
 A two-wheel differential-drive line-following robot: Arduino Nano firmware, an 8-channel reflectance sensor array, and two custom KiCad PCBs.
 
-Full functional specification: [`docs/FSD.html`](docs/FSD.html)
+Full functional specification: [`docs/FSD.html`](docs/FSD.html) · User manual (Spanish): [`docs/MANUAL.html`](docs/MANUAL.html)
 
 ## Features
 
@@ -20,6 +20,7 @@ src/zopapa/       Arduino sketch (zopapa.ino is the entry point)
 src/libraries/    Vendored first-party libraries: DRV8833 (motor driver), ATRSensors (line sensor)
 hardware/         KiCad PCB projects — main_pcb (Rapiduino) and line_sensor_pcb (ATR-8A)
 docs/FSD.html     Functional Specification Document
+docs/MANUAL.html  User manual (Spanish) — physical controls and BT/Serial commands
 ```
 
 ## Build

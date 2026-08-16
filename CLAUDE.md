@@ -16,6 +16,9 @@ array). Full functional spec: docs/FSD.html.
 - `hardware/main_pcb/` — Rapiduino main PCB, KiCad project.
 - `hardware/line_sensor_pcb/` — ATR-8A sensor PCB, KiCad project.
 - `docs/FSD.html` — Functional Specification Document (open in a browser).
+- `docs/MANUAL.html` — end-user manual in Spanish (physical controls, BT/
+  Serial commands). Keep in sync with `docs/FSD.html` and the DIP/button/
+  command tables in this file when firmware HMI behavior changes.
 
 ## Build
 ```
