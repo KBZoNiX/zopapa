@@ -24,6 +24,8 @@ void correr(void) {
   int correccion_pid = (KP * posicion) + (KD * (posicion - ultima_posicion));
     ultima_posicion = posicion;
 
+  logTelemetry(posicion, correccion_pid);  // Phase 0 — ver PLAN-speed-scheduling-v3_1.md
+
   if (estado == 2) {
     actualizarTurbina(correccion_pid); // Actualiza velocidad turbina
   }
@@ -40,3 +42,15 @@ void correr(void) {
   }
 
 }  // FIN CORRER()
+
+
+/**** CONDUCIR RECTO (lazo abierto) ***/
+// Aplica SPEED a ambas ruedas sin leer la regleta ni corregir. Sólo para el
+// bench-test T1.1 (medición de Kv/S0): permite medir tiempo/distancia en
+// línea recta sin que la corrección de steering enmascare el mapeo
+// PWM->velocidad. Entra por el comando 'O' (bt.ino); sale con 'P' como
+// cualquier otro estado.
+void conducirRecto(void) {
+  motorIzq.speed(SPEED);
+  motorDer.speed(SPEED);
+}  // FIN CONDUCIRRECTO()

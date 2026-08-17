@@ -15,3 +15,8 @@ fp-info-cache
 # Editor / OS
 .DS_Store
 *.swp
+
+# Telemetry captures (tools/capture_telemetry.py) and Python cache
+logs/*
+!logs/.gitkeep
+tools/__pycache__/

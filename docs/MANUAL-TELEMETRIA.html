@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zopapa Manual — Telemetría y Ajuste</title>
+<style>
+  :root{
+    --bg:#f1f3ee;
+    --surface:#ffffff;
+    --surface-alt:#e7ebe1;
+    --ink:#1b211c;
+    --ink-dim:#5c665d;
+    --accent:#2f6f4e;
+    --accent-soft:#dfe9e0;
+    --accent-2:#a8702f;
+    --accent-2-soft:#f1e6d5;
+    --border:#d7ddd0;
+    --code-bg:#e9ede2;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Consolas, "Liberation Mono", monospace;
+    --font-body: Optima, Candara, "Noto Sans", "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#121614;
+      --surface:#171c19;
+      --surface-alt:#1e2420;
+      --ink:#e7ece5;
+      --ink-dim:#96a498;
+      --accent:#63cc90;
+      --accent-soft:#1b2b21;
+      --accent-2:#dba05a;
+      --accent-2-soft:#2c2317;
+      --border:#2b332c;
+      --code-bg:#1b211d;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#121614;
+    --surface:#171c19;
+    --surface-alt:#1e2420;
+    --ink:#e7ece5;
+    --ink-dim:#96a498;
+    --accent:#63cc90;
+    --accent-soft:#1b2b21;
+    --accent-2:#dba05a;
+    --accent-2-soft:#2c2317;
+    --border:#2b332c;
+    --code-bg:#1b211d;
+  }
+
+  *{box-sizing:border-box;}
+  html{background:var(--bg);}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.65;
+    font-size:16px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:820px;margin:0 auto;padding:64px 26px 140px;}
+
+  code{
+    font-family:var(--font-mono);
+    background:var(--code-bg);
+    padding:1px 5px;
+    border-radius:3px;
+    font-size:0.86em;
+    color:var(--accent);
+    white-space:nowrap;
+  }
+
+  header.doc-head{border-bottom:3px double var(--border);padding-bottom:22px;margin-bottom:8px;}
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:0.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin:0 0 14px;
+  }
+  h1{
+    font-family:var(--font-mono);
+    font-size:clamp(2rem,6vw,2.7rem);
+    letter-spacing:.01em;
+    margin:0 0 6px;
+    text-wrap:balance;
+    color:var(--ink);
+  }
+  h1 span{color:var(--accent);}
+  .subtitle{
+    font-size:1.08rem;
+    color:var(--ink-dim);
+    margin:0 0 20px;
+    max-width:56ch;
+  }
+  .meta-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 22px;
+    font-family:var(--font-mono);
+    font-size:0.76rem;
+    color:var(--ink-dim);
+  }
+  .meta-row b{color:var(--ink);font-weight:600;}
+
+  nav.toc{
+    margin:36px 0 8px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:20px 24px;
+  }
+  nav.toc .eyebrow{margin-bottom:10px;}
+  nav.toc ol{
+    columns:2;
+    column-gap:32px;
+    list-style:none;
+    margin:0;
+    padding:0;
+    font-size:0.9rem;
+  }
+  nav.toc li{break-inside:avoid;margin-bottom:7px;}
+  nav.toc a{color:var(--ink);text-decoration:none;display:flex;gap:8px;}
+  nav.toc a:hover{color:var(--accent);}
+  nav.toc a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  nav.toc .n{font-family:var(--font-mono);color:var(--ink-dim);min-width:1.6em;}
+
+  section{margin-top:56px;}
+  h2{
+    font-family:var(--font-mono);
+    font-size:1rem;
+    text-transform:uppercase;
+    letter-spacing:.07em;
+    color:var(--accent);
+    border-bottom:1px solid var(--border);
+    padding-bottom:10px;
+    margin:0 0 20px;
+    display:flex;
+    gap:12px;
+    align-items:baseline;
+    scroll-margin-top:20px;
+  }
+  h2 .num{color:var(--ink-dim);font-weight:400;}
+  h3{
+    font-family:var(--font-mono);
+    font-size:0.92rem;
+    color:var(--ink);
+    margin:30px 0 10px;
+    scroll-margin-top:20px;
+  }
+  p{margin:0 0 14px;max-width:68ch;}
+  ul{margin:0 0 14px;padding-left:1.3em;max-width:66ch;}
+  li{margin-bottom:5px;}
+  strong{color:var(--ink);}
+
+  .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:6px;margin:0 0 18px;}
+  table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:0.82rem;font-variant-numeric:tabular-nums;background:var(--surface);}
+  th{
+    text-align:left;
+    font-weight:600;
+    color:var(--ink-dim);
+    text-transform:uppercase;
+    font-size:0.66rem;
+    letter-spacing:.06em;
+    border-bottom:2px solid var(--accent);
+    padding:9px 12px;
+    white-space:nowrap;
+  }
+  td{padding:7px 12px;border-bottom:1px solid var(--border);vertical-align:top;font-family:var(--font-body);font-size:0.92rem;}
+  td code{font-size:0.86em;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:nth-child(even) td{background:var(--surface-alt);}
+
+  .note{
+    border-left:3px solid var(--accent-2);
+    background:var(--accent-2-soft);
+    padding:11px 16px;
+    border-radius:0 6px 6px 0;
+    font-size:0.9rem;
+    margin:0 0 16px;
+    max-width:66ch;
+  }
+  .note b{color:var(--accent-2);font-family:var(--font-mono);font-size:0.72rem;letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:4px;}
+
+  .warn{
+    border-left:3px solid #b5482f;
+    background:#f6e2db;
+    padding:11px 16px;
+    border-radius:0 6px 6px 0;
+    font-size:0.9rem;
+    margin:0 0 16px;
+    max-width:66ch;
+    color:#3a1c12;
+  }
+  .warn b{color:#b5482f;font-family:var(--font-mono);font-size:0.72rem;letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:4px;}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) .warn{background:#2c1912;color:#f0dcd3;}
+  }
+  :root[data-theme="dark"] .warn{background:#2c1912;color:#f0dcd3;}
+
+  pre{
+    background:var(--code-bg);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:14px 16px;
+    overflow-x:auto;
+    font-family:var(--font-mono);
+    font-size:0.82rem;
+    margin:0 0 16px;
+  }
+  pre code{background:none;padding:0;white-space:pre;color:var(--ink);}
+
+  ol.steps{list-style:none;margin:0 0 18px;padding:0;counter-reset:step;}
+  ol.steps li{
+    counter-increment:step;
+    display:flex;
+    gap:16px;
+    padding:14px 0;
+    border-bottom:1px solid var(--border);
+  }
+  ol.steps li:last-child{border-bottom:none;}
+  ol.steps li::before{
+    content:counter(step);
+    font-family:var(--font-mono);
+    font-weight:700;
+    font-size:0.9rem;
+    color:var(--accent);
+    background:var(--accent-soft);
+    width:28px;
+    height:28px;
+    min-width:28px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  ol.steps .step-body p{margin:0;}
+  ol.steps .step-body pre{margin:8px 0 0;}
+  ol.steps .step-title{font-weight:600;color:var(--ink);display:block;margin-bottom:3px;}
+
+  .pill{
+    display:inline-block;
+    font-family:var(--font-mono);
+    font-size:0.7rem;
+    padding:2px 9px;
+    border-radius:20px;
+    border:1px solid var(--border);
+    color:var(--ink-dim);
+  }
+  .pill.on{color:var(--accent);border-color:var(--accent);background:var(--accent-soft);}
+
+  .cheat{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:22px 26px;
+  }
+  .cheat h3{margin-top:0;}
+  .cheat-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px 28px;}
+  @media (max-width:600px){.cheat-grid{grid-template-columns:1fr;}}
+  .cheat-grid dt{font-family:var(--font-mono);font-size:0.72rem;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+  .cheat-grid dd{margin:0 0 12px;font-size:0.88rem;}
+
+  footer{margin-top:80px;padding-top:20px;border-top:1px solid var(--border);font-size:0.76rem;color:var(--ink-dim);font-family:var(--font-mono);}
+  a{color:var(--accent);}
+  ::selection{background:var(--accent);color:var(--surface);}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<header class="doc-head">
+  <p class="eyebrow">Manual de Usuario · Complemento · Rev A</p>
+  <h1>ZOPAPA <span>/ Telemetría</span></h1>
+  <p class="subtitle">Cómo capturar telemetría y hacer las mediciones de banco del ajuste de ganancias por velocidad (ganancia programada).</p>
+  <div class="meta-row">
+    <span><b>Idioma</b> Español</span>
+    <span><b>Alcance</b> Comandos <code>O</code>/<code>Z</code>/<code>N</code>/<code>A</code>/<code>M</code>, captura y lectura de datos, sesión de banco</span>
+    <span><b>Manual general</b> <code>docs/MANUAL.html</code></span>
+    <span><b>Plan técnico completo</b> <code>PLAN-speed-scheduling-v3_1.md</code></span>
+  </div>
+</header>
+
+<nav class="toc">
+  <p class="eyebrow">Contenido</p>
+  <ol>
+    <li><a href="#s1"><span class="n">1</span> Para qué sirve esto</a></li>
+    <li><a href="#s2"><span class="n">2</span> Antes de empezar</a></li>
+    <li><a href="#s3"><span class="n">3</span> Comandos nuevos</a></li>
+    <li><a href="#s4"><span class="n">4</span> Sesión de banco, paso a paso</a></li>
+    <li><a href="#s5"><span class="n">5</span> Herramienta de captura</a></li>
+    <li><a href="#s6"><span class="n">6</span> Leer un volcado de telemetría</a></li>
+    <li><a href="#s7"><span class="n">7</span> Seguridad</a></li>
+    <li><a href="#s8"><span class="n">8</span> Preguntas frecuentes</a></li>
+    <li><a href="#s9"><span class="n">9</span> Referencia rápida</a></li>
+  </ol>
+</nav>
+
+<section id="s1">
+  <h2><span class="num">1.</span> Para qué sirve esto</h2>
+  <p>Con las ganancias KP/KD fijas, Zopapa sigue bien la línea a velocidad baja pero oscila y se sale de la línea a velocidad de competencia. Antes de tocar el algoritmo de control hace falta <strong>medir</strong> qué está pasando — no adivinarlo. Este manual cubre las herramientas agregadas para eso: un registro de telemetría a bordo y un puñado de comandos nuevos para las pruebas de banco que necesita la investigación.</p>
+  <p>Es un documento de <strong>banco de pruebas</strong>, no de uso en competencia — complementa a <code>docs/MANUAL.html</code>, no lo reemplaza. El detalle técnico de por qué se está midiendo esto (modelo del lazo de control, hipótesis, plan de medición) está en <code>PLAN-speed-scheduling-v3_1.md</code>, en la raíz del repositorio.</p>
+</section>
+
+<section id="s2">
+  <h2><span class="num">2.</span> Antes de empezar</h2>
+  <ul>
+    <li>Una PC con el robot conectado por <strong>USB</strong> (recomendado para esto — más rápido y confiable que Bluetooth) al puerto serie de 9600 baudios, igual que para programarlo.</li>
+    <li>Python 3 con <code>pyserial</code> instalado (<code>pip install pyserial</code>) para usar <code>tools/capture_telemetry.py</code>. <code>matplotlib</code> es opcional — sin él, el script igual guarda el CSV, sólo no dibuja el gráfico (<code>pip install matplotlib</code>).</li>
+    <li>Firmware actualizado con los comandos de este manual — si <code>H</code> no muestra <code>O</code>/<code>Z</code>/<code>N</code>/<code>A</code>/<code>M</code>, hace falta reflashear primero.</li>
+    <li>Espacio despejado o el robot sobre una guía/rodillos — varias de estas pruebas corren los motores sin la corrección normal de steering.</li>
+  </ul>
+</section>
+
+<section id="s3">
+  <h2><span class="num">3.</span> Comandos nuevos</h2>
+  <p>Se usan igual que los de <code>docs/MANUAL.html</code> sección 5: por el mismo puerto serie/Bluetooth, terminados en Enter. Igual que el resto, sólo se aceptan con el robot Detenido (salvo <code>Z</code>, que también puede pedirse durante una corrida).</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Comando</th><th>Función</th><th>Ejemplo</th></tr></thead>
+      <tbody>
+        <tr><td><code>O</code></td><td>Arrancar en <strong>recto, lazo abierto</strong> — aplica <code>SPEED</code> a ambas ruedas por igual, sin leer la regleta ni corregir. Para medir la relación PWM→velocidad real (sección 4.1).</td><td><code>O</code></td></tr>
+        <tr><td><code>Z</code></td><td>Volcar el buffer de telemetría como CSV por el puerto serie, con una cabecera de metadatos. Reinicia el buffer al terminar — cada <code>Z</code> entrega una ventana nueva.</td><td><code>Z</code></td></tr>
+        <tr><td><code>Nxxx</code></td><td>Cuántos ciclos de control saltear entre muestras guardadas (decimación). <code>N1</code> guarda todos los ciclos; valores más altos alargan la ventana de tiempo cubierta a costa de resolución.</td><td><code>N10</code></td></tr>
+        <tr><td><code>Axxx</code></td><td>Amplitud fija para el relé del AutoTune (<code>T</code>), en vez de la proporcional a <code>SPEED</code> por defecto. <code>A0</code> vuelve al comportamiento normal.</td><td><code>A50</code></td></tr>
+        <tr><td><code>Mxxx</code></td><td>Tiempo máximo (ms) que el AutoTune (<code>T</code>) espera para reunir suficientes picos antes de abortar. Por defecto 2000.</td><td><code>M8000</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note"><b>N y A, según qué se esté midiendo</b> Para un barrido con AutoTune (<code>T</code>), usar <code>N1</code> o <code>N2</code> — la amplitud del pico importa y una corrida de relé es corta. Para una vuelta completa de la pista, <code>N8</code> a <code>N16</code> — ahí importa dónde pasa algo, no el valor exacto de cada pico.</div>
+</section>
+
+<section id="s4">
+  <h2><span class="num">4.</span> Sesión de banco, paso a paso</h2>
+  <p>Corresponde a las tareas T1.1/T1.2/T1.5/T1.6 del plan. Se puede hacer cualquiera de forma independiente; no hace falta seguir el orden salvo que se indique.</p>
+
+  <h3>4.1 Medir la relación PWM→velocidad (T1.1)</h3>
+  <ol class="steps">
+    <li>
+      <div class="step-body">
+        <span class="step-title">Marcar una distancia recta conocida</span>
+        <p>Unos metros de piso liso y recto, sin línea de por medio (esta prueba no sigue línea). Cronómetro a mano.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-body">
+        <span class="step-title">Fijar la velocidad a medir</span>
+        <p><code>V150</code> (o el valor que corresponda). Repetir toda la secuencia en al menos 3–4 velocidades distintas — dos puntos no alcanzan para ajustar la zona muerta.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-body">
+        <span class="step-title">Arrancar en recto y cronometrar</span>
+        <p>Comando <code>O</code>. El robot arranca en línea recta sin corrección. Cronometrar el paso por la distancia marcada.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-body">
+        <span class="step-title">Detener</span>
+        <p>Comando <code>P</code> (o el pulsador).</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-body">
+        <span class="step-title">Anotar y repetir</span>
+        <p><code>SPEED</code> y velocidad medida (distancia / tiempo) para cada corrida. Con esos pares se ajusta <code>v = Kv·(SPEED − S0)</code> — ver el plan, sección T1.1.</p>
+      </div>
+    </li>
+  </ol>
+
+  <h3>4.2 Barrido de AutoTune multi-velocidad (T1.2)</h3>
+  <div class="note"><b>Antes de arrancar</b> Poner el robot sobre una guía recta o con las ruedas levantadas, igual que para cualquier AutoTune (<code>docs/MANUAL.html</code> sección 4).</div>
+  <ol class="steps">
+    <li>
+      <div class="step-body">
+        <span class="step-title">Fijar una amplitud de relé fija</span>
+        <p><code>A50</code> (o el valor elegido) — mantenerla igual en todas las velocidades del barrido, así las corridas quedan comparables entre sí. No usar <code>A0</code> para esta prueba.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-body">
+        <span class="step-title">Bajar la decimación de telemetría</span>
+        <p><code>N1</code> o <code>N2</code>, para no perder amplitud de pico en el registro.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-body">
+        <span class="step-title">Fijar la velocidad y correr el AutoTune</span>
+        <p><code>V150</code>, después <code>T</code>. Mirar la salida por serie: picos detectados (<code>Peak!</code>), <code>Pu</code>, <code>Ku</code>, ganancias sugeridas.</p>
+        <p>Si aparece <code>Autotune abortado: posición cerca del borde de la regleta</code>, la prueba se salió de rango — bajar la amplitud (<code>A</code>) o revisar el guiado antes de repetir.</p>
+        <p>Si aparece <code>not enough peaks detected</code> y la velocidad es baja, puede que la oscilación sea más lenta que el tiempo de espera — subir el timeout con <code>M</code> (por ejemplo <code>M8000</code>) y repetir.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-body">
+        <span class="step-title">Volcar la telemetría de esa corrida</span>
+        <p><code>Z</code> — guarda el tramo de relé recién corrido (posición y corrección por ciclo) para revisar la forma de la oscilación fuera de línea.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-body">
+        <span class="step-title">Repetir en 3 o más velocidades</span>
+        <p>Cubriendo el rango más amplio que sea seguro, no sólo velocidades bajas. Completar la tabla de resultados del plan (sección Phase 1) con <code>SPEED</code>, <code>KP_REF</code>, <code>KD_REF</code>, <code>Pu</code>.</p>
+      </div>
+    </li>
+  </ol>
+
+  <h3>4.3 Localizar dónde falla a velocidad alta (T1.5)</h3>
+  <ol class="steps">
+    <li>
+      <div class="step-body">
+        <span class="step-title">Subir la decimación</span>
+        <p><code>N8</code> a <code>N16</code>, para cubrir varios segundos de vuelta en vez de una fracción de segundo.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-body">
+        <span class="step-title">Correr normalmente, subiendo la velocidad</span>
+        <p><code>V</code> en pasos, <code>S</code> para arrancar cada corrida, sobre la pista real, hasta que se salga de la línea o oscile visiblemente.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-body">
+        <span class="step-title">Volcar y graficar</span>
+        <p><code>Z</code>, o mejor, capturar con <code>tools/capture_telemetry.py</code> (sección 5) para ver el gráfico directamente y ubicar si el error crece en las rectas o se dispara al entrar en una curva.</p>
+      </div>
+    </li>
+  </ol>
+
+  <h3>4.4 Comparar contra la tabla empírica vieja (T1.6)</h3>
+  <p><code>docs/FSD.html</code> sección 11.1 tiene una tabla de KP/KD por velocidad de sesiones de prueba anteriores, marcada como dato viejo sin verificar. Para confirmar si sigue sirviendo: fijar <code>K</code>/<code>D</code>/<code>V</code> a mano con los valores de esa tabla en 2–3 velocidades, correr con telemetría (<code>N8</code>–<code>N16</code>), y comparar el error pico y la amplitud de oscilación contra lo que da el AutoTune (sección 4.2) a las mismas velocidades.</p>
+</section>
+
+<section id="s5">
+  <h2><span class="num">5.</span> Herramienta de captura</h2>
+  <p><code>tools/capture_telemetry.py</code> se conecta al puerto serie, pide un volcado (<code>Z</code>), y guarda el resultado en <code>logs/</code> como CSV y como gráfico (si hay <code>matplotlib</code>).</p>
+  <pre><code>python3 tools/capture_telemetry.py /dev/ttyUSB0 --tag t1_5_v200</code></pre>
+  <p>El robot tiene que estar ya corriendo (o recién detenido, con el buffer todavía sin volcar) antes de correr el script — arrancar la corrida a mano primero, y recién ahí pedir la captura. El script manda <code>Z</code> apenas se conecta.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Opción</th><th>Uso</th></tr></thead>
+      <tbody>
+        <tr><td><code>--baud</code></td><td>Velocidad del puerto (default 9600, no debería hacer falta cambiarlo).</td></tr>
+        <tr><td><code>--tag</code></td><td>Prefijo del archivo en <code>logs/</code> — usar algo descriptivo (<code>t1_2_v150</code>, <code>t1_5_v220</code>).</td></tr>
+        <tr><td><code>--no-plot</code></td><td>Sólo guarda el CSV, sin intentar graficar.</td></tr>
+        <tr><td><code>--timeout</code></td><td>Segundos que espera el marcador de fin del volcado antes de abortar (default 15).</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Los archivos quedan en <code>logs/</code> (no versionado en git): <code>&lt;tag&gt;_&lt;fecha&gt;.raw.txt</code> (volcado crudo), <code>.csv</code> (columnas <code>t_ms, dt_us, posicion, corr</code>) y <code>.png</code> (gráfico).</p>
+</section>
+
+<section id="s6">
+  <h2><span class="num">6.</span> Leer un volcado de telemetría</h2>
+  <p>Así se ve un <code>Z</code> por consola, sin pasar por el script:</p>
+  <pre><code>--- TELEMETRY DUMP ---
+KP=2.0000 KD=10.0000 SPEED=150
+loop_dt_us min=1936 max=3104 mean=2210.50
+samples=120 decimation=8
+dt_us,posicion,corr
+17680,-42,18
+17696,-38,16
+...
+--- END ---</code></pre>
+  <ul>
+    <li><strong><code>KP/KD/SPEED</code></strong>: los valores vigentes durante toda la captura (no cambian dentro de un volcado).</li>
+    <li><strong><code>loop_dt_us</code></strong>: mínimo/máximo/promedio del período real del ciclo de control, en microsegundos, medido sobre <em>todos</em> los ciclos (no sólo los guardados) — esto es lo que responde "¿el loop corre realmente a 2&nbsp;ms?" (spoiler: seguramente no exactamente, ver <code>PLAN-speed-scheduling-v3_1.md</code> sección 3).</li>
+    <li><strong><code>samples</code> / <code>decimation</code></strong>: cuántas filas siguen abajo, y cada cuántos ciclos se guardó una.</li>
+    <li><strong>Filas <code>dt_us,posicion,corr</code></strong>: una por muestra guardada. <code>dt_us</code> es el tiempo desde la muestra <em>anterior guardada</em> (no desde el ciclo anterior, si <code>decimation&nbsp;&gt;&nbsp;1</code>) — para reconstruir el tiempo acumulado, sumar <code>dt_us</code> fila por fila (es lo que hace <code>capture_telemetry.py</code> para el eje X del gráfico).</li>
+  </ul>
+  <div class="note"><b>Cada Z entrega una ventana nueva</b> El volcado reinicia el buffer al terminar. Si se necesita releer los mismos datos, guardar el <code>.raw.txt</code>/<code>.csv</code> del script — no hay forma de volver a pedir el mismo volcado.</div>
+</section>
+
+<section id="s7">
+  <h2><span class="num">7.</span> Seguridad</h2>
+  <div class="warn">
+    <b>Los motores arrancan apenas se manda el comando</b>
+    <p><code>O</code>, <code>S</code> y <code>T</code> ponen las ruedas en marcha de inmediato, sin cuenta regresiva. No mandarlos sin estar mirando el robot y con espacio despejado alrededor (o sobre una guía/rodillos, como recomienda <code>docs/MANUAL.html</code> para el AutoTune).</p>
+  </div>
+  <ul>
+    <li><strong><code>O</code> (recto, lazo abierto) no tiene parada de seguridad por pérdida de línea</strong> — a diferencia de <code>S</code>, no lee la regleta, así que no hay forma de que se detenga solo si algo sale mal. Detener a mano con <code>P</code> o el pulsador.</li>
+    <li><strong>El AutoTune (<code>T</code>) sí aborta solo</strong> si la posición se acerca al borde físico de la regleta, independientemente de la velocidad o la amplitud del relé.</li>
+    <li>Al usar <code>A</code> para fijar una amplitud de relé más alta que la proporcional por defecto, la excursión durante el AutoTune puede ser mayor de lo habitual — empezar con valores conservadores y subir de a poco.</li>
+    <li>Al usar <code>M</code> para alargar el timeout del AutoTune, la prueba puede correr más tiempo del acostumbrado (por defecto, hasta 2&nbsp;s) antes de que el aborto por picos insuficientes lo corte — seguir mirando el robot durante toda la ventana, no sólo el instante inicial.</li>
+  </ul>
+</section>
+
+<section id="s8">
+  <h2><span class="num">8.</span> Preguntas frecuentes</h2>
+  <h3><code>H</code> no muestra los comandos de este manual</h3>
+  <p>El firmware conectado es anterior a esta funcionalidad — hace falta reflashear (ver <code>CLAUDE.md</code>, sección Flash).</p>
+  <h3><code>Z</code> no devuelve filas, sólo la cabecera</h3>
+  <p>El buffer estaba vacío — <code>Z</code> reinicia el buffer al volcar (sección 6), así que un segundo <code>Z</code> inmediato sin haber corrido el robot en el medio no va a tener nada nuevo que mostrar. Hace falta que el robot esté en marcha (<code>S</code>/<code>O</code>) o corriendo un AutoTune (<code>T</code>) entre volcados.</p>
+  <h3>El gráfico de <code>capture_telemetry.py</code> no se genera</h3>
+  <p>Falta <code>matplotlib</code> (<code>pip install matplotlib</code>). El CSV se guarda igual, con o sin esa librería.</p>
+  <h3>¿<code>N</code>/<code>A</code>/<code>M</code> se guardan en memoria como <code>W</code>?</h3>
+  <p>No — son valores de sesión, vuelven a sus valores por defecto (<code>N1</code>, <code>A0</code>, <code>M2000</code>) al reiniciar el robot. Sólo <code>SPEED</code>/<code>KP</code>/<code>KD</code> se guardan con <code>W</code> (<code>docs/MANUAL.html</code> sección 4).</p>
+</section>
+
+<section id="s9">
+  <h2><span class="num">9.</span> Referencia rápida</h2>
+  <div class="cheat">
+    <h3>Tarjeta resumen</h3>
+    <dl class="cheat-grid">
+      <dt>Medir Kv/S0 (T1.1)</dt>
+      <dd><code>V&lt;n&gt;</code> → <code>O</code> → cronometrar → <code>P</code></dd>
+      <dt>Barrido AutoTune comparable (T1.2)</dt>
+      <dd><code>A&lt;d&gt;</code> fija, <code>N1</code>/<code>N2</code>, <code>V&lt;n&gt;</code>, <code>T</code>, <code>Z</code></dd>
+      <dt>Vuelta completa con telemetría (T1.5)</dt>
+      <dd><code>N8</code>–<code>N16</code>, <code>S</code>, <code>Z</code> o <code>capture_telemetry.py</code></dd>
+      <dt>AutoTune con más tiempo</dt>
+      <dd><code>M&lt;ms&gt;</code> antes de <code>T</code></dd>
+      <dt>Volver a amplitud/decimación normal</dt>
+      <dd><code>A0</code>, <code>N1</code></dd>
+      <dt>Capturar y graficar desde la PC</dt>
+      <dd><code>python3 tools/capture_telemetry.py &lt;puerto&gt;</code></dd>
+    </dl>
+  </div>
+</section>
+
+<footer>
+  Complementa <code>docs/MANUAL.html</code> y <code>docs/FSD.html</code>. Contexto técnico completo — hipótesis, modelo del lazo, presupuesto de SRAM, tareas T-1.x/T1.x — en <code>PLAN-speed-scheduling-v3_1.md</code>.
+</footer>
+
+</div>
+</body>
+</html>

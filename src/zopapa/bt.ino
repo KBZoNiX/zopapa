@@ -14,6 +14,11 @@
  * W        Guardar parámetros    W
  * Q        Probar regleta        Q
  * C        Recalibrar regleta   C
+ * O        Recto (lazo abierto) O           (bench-test T1.1)
+ * Z        Volcar telemetría    Z
+ * Nxxx     Decimación telemetría Nxxx        N10
+ * Axxx     Amplitud relé fija   Axxx         A50 (A0 = proporcional a SPEED)
+ * Mxxx     Timeout autotune ms  Mxxx         M8000 (default 2000)
  * H        Help!
  */
 
@@ -58,6 +63,11 @@ Serial.println(F("L        Cargar parámetros     L"));
 Serial.println(F("W        Guardar parámetros    W"));
 Serial.println(F("Q        Probar regleta        Q"));
 Serial.println(F("C        Recalibrar regleta    C"));
+Serial.println(F("O        Recto (lazo abierto)  O   (bench-test T1.1)"));
+Serial.println(F("Z        Volcar telemetria      Z"));
+Serial.println(F("Nxxx     Decimacion telemetria  N10"));
+Serial.println(F("Axxx     Amplitud rele fija     A50 (A0 = proporcional)"));
+Serial.println(F("Mxxx     Timeout autotune (ms)  M8000 (default 2000)"));
 Serial.println(F("H        Help!"));
   
 }
@@ -143,6 +153,41 @@ void btProcessCommand(String cmd) {
       
     case 'W':
       guardarConstantesPID(KP, KD, SPEED);
+      break;
+
+    case 'O':
+      estado = 3;
+      Serial.println(F("Conduciendo recto (lazo abierto, bench-test T1.1)..."));
+      break;
+
+    case 'Z':
+      telemetryDumpCSV();
+      break;
+
+    case 'N':
+      {
+        int n = value.toInt();
+        telemetryDecimation = (n < 1) ? 1 : (byte)min(n, 255);
+        Serial.print(F("Decimacion telemetria = ")); Serial.println(telemetryDecimation);
+      }
+      break;
+
+    case 'A':
+      relayAmplitudeOverride = value.toInt();
+      Serial.print(F("Amplitud rele fija = "));
+      if (relayAmplitudeOverride > 0) {
+        Serial.println(relayAmplitudeOverride);
+      } else {
+        Serial.println(F("(desactivada, usa 0.5*SPEED)"));
+      }
+      break;
+
+    case 'M':
+      {
+        long m = value.toInt();
+        autotuneTimeoutMs = (m < 100) ? 100 : (unsigned long)m;
+        Serial.print(F("Timeout autotune = ")); Serial.print(autotuneTimeoutMs); Serial.println(F(" ms"));
+      }
       break;
 
     default:

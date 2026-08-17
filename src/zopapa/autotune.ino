@@ -10,15 +10,19 @@ void autotuneRelay() {
   int peakCount = 0;
 
   bool relayState = true;  // true -> +d, false -> -d
-  int d = relayAmplitude();
-  
+  // Amplitud fija (comando 'A') anula la proporcional-a-SPEED por defecto:
+  // ver T1.2 del plan — con 0.5*SPEED, la excitación (y por lo tanto la
+  // excursión de posición) escala con SPEED, así que las corridas del
+  // barrido multi-velocidad no son comparables entre sí.
+  int d = (relayAmplitudeOverride > 0) ? relayAmplitudeOverride : relayAmplitude();
+
   Serial.println(F(">>> AUTOTUNE START (relay method)"));
   Serial.print(F("Relay amplitude (d) = "));
   Serial.println(d);
 
   // Reiniciar tiempos y flags
   unsigned long startTime = millis();
-  unsigned long timeoutAt = startTime + AUTOTUNE_TIMEOUT_MS;
+  unsigned long timeoutAt = startTime + autotuneTimeoutMs;
   double prevError = 0;
   int lastDerivSign = 0;
 
@@ -31,6 +35,17 @@ void autotuneRelay() {
     const int centro_de_linea = (NRO_SENSORES - 1) * 100 / 2;
     int posicion = centro_de_linea - Regleta.readLine(sensor_values, COLOR_LINEA);
     double error = (double)posicion;  // PV para la medición
+
+    // T1.0: aborta si la posición se acerca al límite físico de la regleta
+    // (±350) — sin esto, una corrida a una velocidad no probada antes puede
+    // saturarse contra el borde sin que el método lo detecte.
+    if (abs(posicion) >= RELAY_EDGE_ABORT) {
+      motorIzq.stop();
+      motorDer.stop();
+      Serial.println(F("Autotune abortado: posición cerca del borde de la regleta."));
+      beep(3, 200, 9);
+      return;
+    }
 
     // aplicar relé (sin PD) sobre la corrección: control diferencial directo
     int corr = relayState ? d : -d;
@@ -70,6 +85,8 @@ void autotuneRelay() {
     }
     lastDerivSign = derivSign;
     prevError = error;
+
+    logTelemetry(posicion, corr);  // Phase 0 — set N=1-2 (comando 'N') antes de T1.2 para no perder amplitud de pico
 
     delay(AUTOTUNE_LOOP_MS);
   }  // end while

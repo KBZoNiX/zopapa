@@ -19,6 +19,14 @@ array). Full functional spec: docs/FSD.html.
 - `docs/MANUAL.html` — end-user manual in Spanish (physical controls, BT/
   Serial commands). Keep in sync with `docs/FSD.html` and the DIP/button/
   command tables in this file when firmware HMI behavior changes.
+- `docs/MANUAL-TELEMETRIA.html` — companion manual in Spanish for the
+  bench-test telemetry/tuning workflow (`O`/`Z`/`N`/`A`/`M` commands added
+  for `PLAN-speed-scheduling-v3_1.md` Phase 0/1). Keep in sync with that
+  plan and with new telemetry/autotune commands as they land.
+- `PLAN-speed-scheduling-v3_1.md` — active investigation into why fixed
+  PD gains under-damp at race speed; supersedes the same-named v2/v2.1/v3
+  drafts. Phase 2 (decision gate) is not resolved — do not implement
+  Phase 3A/3B/3C without checking its results table first.
 
 ## Build
 ```

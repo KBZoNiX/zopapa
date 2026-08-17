@@ -60,13 +60,38 @@ ATRSensors Regleta(SENSORES, NRO_SENSORES);
 
 /*** GLOBAL VARIABLES ***/
 unsigned char sensor_values[NRO_SENSORES];
-byte estado = 0;                            // 0 = Detenido; 1 = Normal; 2 = Turbina
+byte estado = 0;                            // 0 = Detenido; 1 = Normal; 2 = Turbina; 3 = Recto (lazo abierto, bench-test T1.1)
 int ultima_posicion = 0;
 unsigned long lastLoopTime = 0;             // Guarda último valor de millis() para controlar el tiempo del loop
 // Bluetooth
 String btCommand = "";
 bool btEnabled = true;
 int ciclos_sin_detectar = 0;
+
+
+/*** Telemetry (Phase 0 — PLAN-speed-scheduling-v3_1.md §0.1) ***/
+// Buffer circular en RAM: (dt en µs desde la muestra anterior, posición,
+// corrección) por ciclo de control. Declarado en este archivo (el primero
+// del sketch al compilar) porque steering.ino, autotune.ino y bt.ino lo
+// referencian y sólo zopapa.ino tiene garantizado compilarse antes que todos
+// ellos. Las funciones que lo usan (logTelemetry(), telemetryDumpCSV()) están
+// en telemetry.ino.
+struct TelemetrySample {
+  int16_t dt;         // µs, saturado a 32767 si el ciclo tardó más (no debería)
+  int16_t posicion;
+  int16_t corr;
+};
+const int TELEMETRY_BUFFER_SIZE = 150;      // ~900 bytes; ver §0.1 del plan para el presupuesto de SRAM
+TelemetrySample telemetryBuffer[TELEMETRY_BUFFER_SIZE];
+int telemetryHead = 0;                      // próximo índice de escritura
+int telemetryCount = 0;                     // muestras válidas (satura en TELEMETRY_BUFFER_SIZE)
+byte telemetryDecimation = 1;               // registra 1 de cada N ciclos (comando 'N'); no afecta las estadísticas de dt
+byte telemetryDecimationCounter = 0;
+unsigned long telemetryLastSampleMicros = 0;
+unsigned long telemetryDtMin = 0xFFFFFFFF;
+unsigned long telemetryDtMax = 0;
+unsigned long telemetryDtSum = 0;
+unsigned long telemetryDtCount = 0;
 
 
 /*** Autotune parameters ***/
@@ -79,9 +104,16 @@ int relayAmplitude() {
 const int RELAY_SETTLE_CYCLES = 3;                // ciclos descartados (de estabilización)
 const int RELAY_MEASURE_CYCLES = 6;               // ciclos usados para cálculo
 const float AUTOTUNE_SAFETY_FACTOR = 0.9;         // Factor de seguridad para las constantes calculadas (Factor < 1 → más conservador / Factor = 1 → más agresivo)
-const unsigned long AUTOTUNE_TIMEOUT_MS = 2000;   // seguridad: 25 s timeout
+// No-const (a diferencia del resto de estos parámetros): el valor original
+// (2000) contradecía su propio comentario ("25 s"), y T1.2 puede necesitar
+// más tiempo a velocidades con Pu lento — ver Phase -1 / T-1.2 y §1.1 del
+// plan. Ajustable en caliente con el comando 'M'; el default no cambia el
+// comportamiento ya validado en cancha.
+unsigned long autotuneTimeoutMs = 2000;           // ms; comando 'M' lo cambia
 const unsigned long LOOP_MS = 2;                 // periodo de ejecución de la función correr() (ms)
 const unsigned long AUTOTUNE_LOOP_MS = LOOP_MS;   // periodo de autotune (ms)
+int relayAmplitudeOverride = 0;                   // 0 = usar relayAmplitude() proporcional; >0 = amplitud fija (comando 'A' — ver T1.2 del plan)
+const int RELAY_EDGE_ABORT = 340;                 // aborta el relay test si |posicion| se acerca al límite de la regleta (±350) — T1.0
 
 
 
@@ -199,7 +231,11 @@ void loop() {
 
   if (estado != 0) {
     if (millis() - lastLoopTime > LOOP_MS) {
-      correr();
+      if (estado == 3) {
+        conducirRecto();  // lazo abierto, sin corrección — bench-test T1.1
+      } else {
+        correr();
+      }
       lastLoopTime = millis();
     }
     btListenStopOnly();
