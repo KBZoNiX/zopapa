@@ -1,0 +1,15 @@
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+pubspec.lock
+
+android/local.properties
+android/.gradle/
+android/gradlew
+android/gradlew.bat
+android/**/gradle-wrapper.jar
+android/key.properties
+*.iml
+.idea/

@@ -15,6 +15,13 @@ array). Full functional spec: docs/FSD.html.
   libraries of similar names.
 - `hardware/main_pcb/` — Rapiduino main PCB, KiCad project.
 - `hardware/line_sensor_pcb/` — ATR-8A sensor PCB, KiCad project.
+- `app/` — Zopapa Control, the Flutter/Android companion app for the BT
+  command protocol in `src/zopapa/bt.ino` (start/stop, gain presets,
+  preflight, calibration, plus the fuller bench-test/telemetry commands
+  behind an Advanced/Practice screen). See `app/README.md` for build steps
+  and architecture notes; the protocol it targets is the single source of
+  truth in `bt.ino`, not this file or `docs/FSD.html` (which is stale on
+  this front — see below).
 - `docs/FSD.html` — Functional Specification Document (open in a browser).
 - `docs/MANUAL.html` — end-user manual in Spanish (physical controls, BT/
   Serial commands). Keep in sync with `docs/FSD.html` and the DIP/button/
