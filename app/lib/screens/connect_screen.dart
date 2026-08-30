@@ -97,6 +97,11 @@ class _ConnectScreenState extends State<ConnectScreen> {
                           : null,
                       onTap: _connectingAddress == null ? () => _connect(device.address) : null,
                     ),
+                  const SizedBox(height: 32),
+                  Opacity(
+                    opacity: 0.85,
+                    child: Image.asset('assets/images/zopapa_app_sticker.png', height: 90, fit: BoxFit.contain),
+                  ),
                 ],
               ),
       ),
