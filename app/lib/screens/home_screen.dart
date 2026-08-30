@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../protocol/exceptions.dart';
+import '../protocol/models.dart';
 import '../state/robot_state.dart';
 import 'advanced_screen.dart';
 import 'widgets/confirm_action_dialog.dart';
@@ -167,6 +168,12 @@ class _ManualGainsCardState extends State<_ManualGainsCard> {
   final _kdController = TextEditingController();
   final _speedController = TextEditingController();
 
+  // Tracks the last GainsStatus we've synced the fields to, by identity —
+  // RobotState only reassigns lastGains when a command actually changes it
+  // (preset load, refresh, autotune, run summary...), so identity is stable
+  // across unrelated rebuilds (e.g. isRunning toggling alone).
+  GainsStatus? _syncedGains;
+
   @override
   void dispose() {
     _kpController.dispose();
@@ -178,6 +185,18 @@ class _ManualGainsCardState extends State<_ManualGainsCard> {
   @override
   Widget build(BuildContext context) {
     final gains = widget.state.lastGains;
+    if (!identical(gains, _syncedGains)) {
+      _syncedGains = gains;
+      // An external update (preset load, refresh, autotune, run summary)
+      // landed — show its values as pre-filled text. hintText alone isn't
+      // enough: with both labelText and hintText set, Material's TextField
+      // only reveals the hint once the label floats (on focus or non-empty
+      // text), so an unfocused field would keep showing just "KP" instead
+      // of the loaded value.
+      _kpController.text = gains?.kp.toStringAsFixed(2) ?? '';
+      _kdController.text = gains?.kd.toStringAsFixed(2) ?? '';
+      _speedController.text = gains?.speed.toString() ?? '';
+    }
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -202,7 +221,6 @@ class _ManualGainsCardState extends State<_ManualGainsCard> {
                     label: 'KP',
                     controller: _kpController,
                     enabled: widget.enabled,
-                    hint: gains?.kp.toString(),
                     onSubmit: (v) => widget.run(() => widget.state.setKp(v)),
                   ),
                 ),
@@ -212,7 +230,6 @@ class _ManualGainsCardState extends State<_ManualGainsCard> {
                     label: 'KD',
                     controller: _kdController,
                     enabled: widget.enabled,
-                    hint: gains?.kd.toString(),
                     onSubmit: (v) => widget.run(() => widget.state.setKd(v)),
                   ),
                 ),
@@ -222,7 +239,6 @@ class _ManualGainsCardState extends State<_ManualGainsCard> {
                     label: 'Velocidad',
                     controller: _speedController,
                     enabled: widget.enabled,
-                    hint: gains?.speed.toString(),
                     onSubmit: (v) => widget.run(() => widget.state.setSpeed(v.round())),
                   ),
                 ),
@@ -241,13 +257,11 @@ class _GainField extends StatelessWidget {
     required this.controller,
     required this.enabled,
     required this.onSubmit,
-    this.hint,
   });
 
   final String label;
   final TextEditingController controller;
   final bool enabled;
-  final String? hint;
   final void Function(double value) onSubmit;
 
   @override
@@ -256,7 +270,7 @@ class _GainField extends StatelessWidget {
       controller: controller,
       enabled: enabled,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: InputDecoration(labelText: label, hintText: hint, isDense: true),
+      decoration: InputDecoration(labelText: label, isDense: true),
       onSubmitted: (text) {
         final value = double.tryParse(text.trim());
         if (value != null) onSubmit(value);

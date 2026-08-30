@@ -116,11 +116,13 @@ void btProcessCommand(String cmd) {
     case 'S':
       estado = true;
       Serial.println(F("Arrancando..."));
+      indicar_estado(estado);  // LED/beep — antes sólo el pulsador los disparaba
       break;
-    
+
     case 'P':
       estado = false;
       Serial.println("Detenido");
+      indicar_estado(estado);  // idem
       break;
 
     case 'T':
@@ -167,6 +169,7 @@ void btProcessCommand(String cmd) {
     case 'O':
       estado = 3;
       Serial.println(F("Conduciendo recto (lazo abierto, bench-test T1.1)..."));
+      indicar_estado(estado);  // idem — feedback de arranque también para este modo
       break;
 
     case 'Z':
