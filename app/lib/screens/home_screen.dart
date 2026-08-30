@@ -60,22 +60,6 @@ class _HomeScreenState extends State<HomeScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          SizedBox(
-            height: 72,
-            child: state.isRunning
-                ? FilledButton.icon(
-                    style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
-                    icon: const Icon(Icons.stop),
-                    label: const Text('DETENER', style: TextStyle(fontSize: 20)),
-                    onPressed: () => _run(() => state.stop()),
-                  )
-                : FilledButton.icon(
-                    icon: const Icon(Icons.play_arrow),
-                    label: const Text('ARRANCAR', style: TextStyle(fontSize: 20)),
-                    onPressed: _busy ? null : () => _run(() => state.start()),
-                  ),
-          ),
-          const SizedBox(height: 16),
           Text('Perfiles', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Row(
@@ -97,13 +81,29 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 16),
           _ManualGainsCard(state: state, enabled: !locked, run: _run),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 72,
+            child: state.isRunning
+                ? FilledButton.icon(
+                    style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+                    icon: const Icon(Icons.stop),
+                    label: const Text('DETENER', style: TextStyle(fontSize: 20)),
+                    onPressed: () => _run(() => state.stop()),
+                  )
+                : FilledButton.icon(
+                    icon: const Icon(Icons.play_arrow),
+                    label: const Text('ARRANCAR', style: TextStyle(fontSize: 20)),
+                    onPressed: _busy ? null : () => _run(() => state.start()),
+                  ),
+          ),
+          const SizedBox(height: 24),
           Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.fact_check),
-                  label: const Text('Chequeo previo'),
+                  label: const Text('Preflight'),
                   onPressed: locked ? null : () => _run(() => state.runPreflight()),
                 ),
               ),
@@ -146,6 +146,11 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 16),
             RunSummaryCard(summary: state.lastRunSummary!),
           ],
+          const SizedBox(height: 32),
+          Opacity(
+            opacity: 0.85,
+            child: Image.asset('assets/images/zopapa_app_sticker.png', height: 90, fit: BoxFit.contain),
+          ),
         ],
       ),
     );

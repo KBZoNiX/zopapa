@@ -46,12 +46,47 @@ class _ZopapaControlAppState extends State<ZopapaControlApp> {
       value: _robotState,
       child: MaterialApp(
         title: 'Zopapa Control',
-        theme: ThemeData(colorSchemeSeed: Colors.deepOrange, useMaterial3: true, brightness: Brightness.light),
-        darkTheme: ThemeData(colorSchemeSeed: Colors.deepOrange, useMaterial3: true, brightness: Brightness.dark),
+        theme: _zopapaTheme(),
+        darkTheme: _zopapaTheme(),
+        themeMode: ThemeMode.dark,
         home: const _RootScreen(),
       ),
     );
   }
+}
+
+// Matches the robot artwork: red/yellow/blue accents on a black ground.
+// Always dark — the branding doesn't adapt to system light mode.
+ThemeData _zopapaTheme() {
+  final colorScheme = ColorScheme.fromSeed(
+    seedColor: const Color(0xFFE5342A),
+    brightness: Brightness.dark,
+  ).copyWith(
+    primary: const Color(0xFFE5342A),
+    secondary: const Color(0xFFFFC72C),
+    // fromSeed derives secondaryContainer from the red seed, not the
+    // yellow override above — set it explicitly so the active-preset
+    // highlight actually reads as yellow instead of a muted red.
+    secondaryContainer: const Color(0xFF4A3B00),
+    onSecondaryContainer: const Color(0xFFFFE082),
+    tertiary: const Color(0xFF2D7DD2),
+    surface: const Color(0xFF141414),
+  );
+  return ThemeData(
+    colorScheme: colorScheme,
+    useMaterial3: true,
+    scaffoldBackgroundColor: Colors.black,
+    appBarTheme: const AppBarTheme(backgroundColor: Colors.black, foregroundColor: Colors.white),
+    // Bordered/secondary actions (Preflight, Calibrar, AutoTune, Advanced
+    // screen) get the blue accent so they read as distinct from the red
+    // filled CTAs (ARRANCAR, Cargar) without adding more colors.
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: colorScheme.tertiary,
+        side: BorderSide(color: colorScheme.tertiary),
+      ),
+    ),
+  );
 }
 
 class _RootScreen extends StatelessWidget {

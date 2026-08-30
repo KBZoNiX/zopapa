@@ -26,8 +26,19 @@ class PresetCard extends StatelessWidget {
           children: [
             Text('Perfil $index', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 4),
-            FilledButton(onPressed: enabled ? onLoad : null, child: const Text('Cargar')),
-            TextButton(onPressed: enabled ? () => _confirmSave(context) : null, child: const Text('Guardar actual')),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 4)),
+                onPressed: enabled ? onLoad : null,
+                child: const Text('Cargar', softWrap: false),
+              ),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 4)),
+              onPressed: enabled ? () => _confirmSave(context) : null,
+              child: const Text('Guardar actual'),
+            ),
           ],
         ),
       ),
