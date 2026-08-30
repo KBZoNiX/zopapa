@@ -18,7 +18,10 @@
  * Z        Volcar telemetría    Z
  * Nxxx     Decimación telemetría Nxxx        N10
  * Axxx     Amplitud relé fija   Axxx         A50 (A0 = proporcional a SPEED)
- * Mxxx     Timeout autotune ms  Mxxx         M8000 (default 2000)
+ * Mxxx     Timeout autotune ms  Mxxx         M8000 (default 8000)
+ * F        Chequeo previo       F            (preflight, T-S3)
+ * Gx       Cargar perfil x      G2           (1..3, T-S5)
+ * Ux       Guardar en perfil x  U2           (1..3, T-S5)
  * H        Help!
  */
 
@@ -67,9 +70,12 @@ Serial.println(F("O        Recto (lazo abierto)  O   (bench-test T1.1)"));
 Serial.println(F("Z        Volcar telemetria      Z"));
 Serial.println(F("Nxxx     Decimacion telemetria  N10"));
 Serial.println(F("Axxx     Amplitud rele fija     A50 (A0 = proporcional)"));
-Serial.println(F("Mxxx     Timeout autotune (ms)  M8000 (default 2000)"));
+Serial.println(F("Mxxx     Timeout autotune (ms)  M8000 (default 8000)"));
+Serial.println(F("F        Chequeo previo         F   (preflight, T-S3)"));
+Serial.println(F("Gx       Cargar perfil x (1-3)  G2  (T-S5)"));
+Serial.println(F("Ux       Guardar en perfil x    U2  (T-S5)"));
 Serial.println(F("H        Help!"));
-  
+
 }
 
 void probar_regleta() {
@@ -128,16 +134,19 @@ void btProcessCommand(String cmd) {
 
     case 'V':
       SPEED = value.toInt();
+      activePreset = -1;  // T-S5: override manual, ya no coincide con el perfil que estuviera activo
       Serial.print(F("Velocidad = ")); Serial.println(SPEED);
       break;
 
     case 'K':
       KP = value.toFloat();
+      activePreset = -1;
       Serial.print("KP = "); Serial.println(KP);
       break;
 
     case 'D':
       KD = value.toFloat();
+      activePreset = -1;
       Serial.print("KD = "); Serial.println(KD);
       break;
 
@@ -187,6 +196,32 @@ void btProcessCommand(String cmd) {
         long m = value.toInt();
         autotuneTimeoutMs = (m < 100) ? 100 : (unsigned long)m;
         Serial.print(F("Timeout autotune = ")); Serial.print(autotuneTimeoutMs); Serial.println(F(" ms"));
+      }
+      break;
+
+    case 'F':
+      preflightCheck();
+      break;
+
+    case 'G':
+      {
+        int idx = value.toInt();
+        if (idx < 1 || idx > PRESET_COUNT) {
+          Serial.print(F("Perfil invalido, usar 1..")); Serial.println(PRESET_COUNT);
+        } else {
+          cargarPreset((byte)(idx - 1));
+        }
+      }
+      break;
+
+    case 'U':
+      {
+        int idx = value.toInt();
+        if (idx < 1 || idx > PRESET_COUNT) {
+          Serial.print(F("Perfil invalido, usar 1..")); Serial.println(PRESET_COUNT);
+        } else {
+          guardarPreset((byte)(idx - 1));
+        }
       }
       break;
 

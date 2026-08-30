@@ -30,6 +30,54 @@ byte SPEED = 100;       // 0..255
 float KP = 2 ;         // gains iniciales (serán sobrescritos por autotune si se ejecuta)
 float KD = 10 ;
 
+// Tier 0 (PLAN-tournament-stopgap-v1.md): no existe gain scheduling en este
+// build — no hay `gainSchedulingActive` que forzar a false ni código que
+// compilar afuera. KP/KD sólo cambian por 'K'/'D', autotune, o carga de
+// EEPROM/perfil; 'V' nunca los toca. Confirmar con 'R' después de 'V' si hace
+// falta re-verificarlo en hardware.
+
+// Perfiles de ganancia (Tier 1, T-S5/T-S6 — ver presets.ino). -1 = ninguno
+// activo (valores manuales, no coinciden necesariamente con un perfil
+// guardado). Se invalida en cualquier 'K'/'D'/'V' manual.
+int8_t activePreset = -1;
+
+// Declarados acá (no en presets.ino) porque bt.ino los necesita y sólo este
+// archivo tiene garantizado compilarse antes que todos los demás — mismo
+// motivo que el buffer de telemetría más abajo.
+const byte PRESET_COUNT = 3;
+const int PRESET_STRIDE = 9;  // KP (float, 4B) + KD (float, 4B) + SPEED (byte, 1B)
+
+// Región propia, separada de la ranura manual KP/KD/SPEED de eeprom.ino
+// (direcciones 0/4/8/12) y de la calibración (1-2, 16-31) — ver docs/FSD.html
+// §10. Marcador de 2 bytes: mismo motivo que el de calibración (evitar que un
+// byte de fábrica/sketch anterior se lea como "válido" por casualidad).
+const int EEPROM_ADDR_PRESET_FLAG = 40;  // ocupa 2 bytes: 40 y 41
+const byte PRESET_MAGIC_0 = 0x9E;
+const byte PRESET_MAGIC_1 = 0x47;
+const int EEPROM_ADDR_PRESET_BASE = 42;  // 42..(42+3*9-1) = 42..68
+
+// Perfiles por defecto (T-S6): filas de la tabla §11.1, extremos y punto
+// medio. "Conservador" para clasificar, "Agresivo" para la final — pensados
+// como punto de partida a ajustar a mano, no como objetivo.
+const byte PRESET_DEFAULT_SPEED[PRESET_COUNT] = { 150, 200, 255 };
+const float PRESET_DEFAULT_KP[PRESET_COUNT]   = { 1.15, 2.0, 2.8 };
+const float PRESET_DEFAULT_KD[PRESET_COUNT]   = { 5.0, 10.0, 14.0 };
+
+// Arranque suave (Tier 2, T-S8). Deshabilitado por defecto: reduce el
+// patinado de arranque pero no fue validado en pista todavía — habilitar y
+// probar antes de usar en torneo.
+const bool SOFT_START_ENABLED = false;
+const unsigned long SOFT_START_MS = 150;
+unsigned long softStartBeginMs = 0;
+
+// Recuperación acotada de pérdida de línea (Tier 2, T-S7). Deshabilitada por
+// defecto: revisar el reglamento del torneo antes de activarla — ver
+// docs/Reglamento-Carreras.md §8.2/§10 (salida completa de pista / reinicio
+// sin reconfiguración) — y validarla en pista sacando el robot de la línea a
+// mano.
+const bool LINE_LOSS_RECOVERY_ENABLED = false;
+const int LINE_LOSS_RECOVERY_CYCLES = 50;  // ciclos adicionales tras MAX_CICLOS_SIN_DETECTAR (~100ms a LOOP_MS=2)
+
 
 // Limita la corrección máxima. Función (no const) porque SPEED puede cambiar
 // en tiempo de ejecución (comando 'V', carga de EEPROM, autotune guardado).
@@ -94,6 +142,22 @@ unsigned long telemetryDtSum = 0;
 unsigned long telemetryDtCount = 0;
 
 
+/*** Resumen de corrida (Tier 1, T-S1 — PLAN-tournament-stopgap-v1.md) ***/
+// Estadísticas acumuladas durante una corrida (estado 1 o 2), impresas al
+// detenerse — ver run_summary.ino. Sustituyen a la telemetría completa como
+// número comparable trackside cuando no hay forma de correr tools/.
+long runSumAbsPos = 0;
+unsigned long runSampleCount = 0;
+int runPeakAbsPos = 0;
+unsigned long runSaturationCycles = 0;   // |posicion| >= RELAY_EDGE_ABORT
+unsigned long runLineLossEvents = 0;
+unsigned long runLineLossCycles = 0;
+unsigned long runDtMinUs = 0xFFFFFFFF;
+unsigned long runDtMaxUs = 0;
+unsigned long runDtSumUs = 0;
+unsigned long runDtCount = 0;
+
+
 /*** Autotune parameters ***/
 // Amplitud de relé (magnitud de la corrección aplicada durante la prueba).
 // Función (no const): debe reflejar el SPEED vigente al momento de ejecutar
@@ -107,9 +171,23 @@ const float AUTOTUNE_SAFETY_FACTOR = 0.9;         // Factor de seguridad para la
 // No-const (a diferencia del resto de estos parámetros): el valor original
 // (2000) contradecía su propio comentario ("25 s"), y T1.2 puede necesitar
 // más tiempo a velocidades con Pu lento — ver Phase -1 / T-1.2 y §1.1 del
-// plan. Ajustable en caliente con el comando 'M'; el default no cambia el
-// comportamiento ya validado en cancha.
-unsigned long autotuneTimeoutMs = 2000;           // ms; comando 'M' lo cambia
+// plan. Ajustable en caliente con el comando 'M'.
+// Subido a 8s para el torneo (T-S9 del stopgap): un timeout de 2s corta la
+// prueba antes de tiempo con más frecuencia de la deseada, pero saltar
+// directo a los 25s del comentario original multiplicaría por ~12 el tiempo
+// que el robot puede quedar oscilando en la pista. 8s es intermedio y se
+// apoya en el edge-abort de RELAY_EDGE_ABORT (abajo) como red de seguridad:
+// si ese abort no está confirmado funcionando, bajar esto de nuevo con 'M' y
+// ajustar a mano en su lugar.
+unsigned long autotuneTimeoutMs = 8000;           // ms; comando 'M' lo cambia
+// Autotune corre siempre a esta velocidad fija (Tier 0 del stopgap, también
+// listado como "branch-independent" en el plan principal): antes probaba a
+// la SPEED vigente al momento de invocar 'T', lo que hacía que la amplitud de
+// excitación (0.5*SPEED) y por lo tanto las ganancias resultantes dependieran
+// de qué SPEED hubiera quedado seteada de antes. Con SPEED_REF fijo, 'T' es
+// seguro de invocar en cualquier momento y las corridas quedan comparables
+// entre sí — ver autotuneRelay() en autotune.ino.
+const byte AUTOTUNE_SPEED_REF = 100;
 const unsigned long LOOP_MS = 2;                 // periodo de ejecución de la función correr() (ms)
 const unsigned long AUTOTUNE_LOOP_MS = LOOP_MS;   // periodo de autotune (ms)
 int relayAmplitudeOverride = 0;                   // 0 = usar relayAmplitude() proporcional; >0 = amplitud fija (comando 'A' — ver T1.2 del plan)
@@ -140,6 +218,7 @@ void setup() {
   if (cargarCalibracion()) {
     Serial.println(F("Calibración cargada desde EEPROM."));
     beep(2, 80, 7);
+    imprimirCalidadCalibracion();  // Tier 1, T-S2
   } else {
     calibrarRegletaManual();
   }
@@ -148,7 +227,12 @@ void setup() {
   if (EEPROM_AUTOLOAD) {
     leerConstantesPID();
   }
-  
+
+  // Perfiles de ganancia (Tier 1, T-S5/T-S6): si la EEPROM no tiene la
+  // sección de perfiles (primer flasheo de este layout), la siembra con los
+  // valores de la tabla §11.1 de la FSD.
+  seedPresetsIfNeeded();
+
   // Entra en modo autotune
   if (digitalRead(DIP_SW4) == LOW) {
     confirmarInicioAutoTune();
@@ -193,11 +277,31 @@ void calibrarRegletaManual() {
   Serial.println(F("Calibrar regleta..."));
 
   guardarCalibracion();
+  imprimirCalidadCalibracion();  // Tier 1, T-S2
 }  // FIN calibrarRegletaManual()
 
 
 /**** LOOP ***/
 void loop() {
+
+  // Tier 1 (T-S1) / Tier 2 (T-S8): detecta el borde Detenido<->Corriendo una
+  // sola vez por vuelta de loop(), sin importar qué código (pulsador, comando
+  // BT, o el auto-stop por pérdida de línea en correr()) cambió `estado` —
+  // todos pasan por acá antes de que se note la próxima vez. Evita instrumentar
+  // cada uno de esos puntos por separado.
+  static byte estadoPrevio = 0;
+  if (estado != estadoPrevio) {
+    bool estabaCorriendo = (estadoPrevio == 1 || estadoPrevio == 2);
+    bool estaCorriendo = (estado == 1 || estado == 2);
+    if (!estabaCorriendo && estaCorriendo) {
+      runSummaryReset();
+      softStartBeginMs = millis();
+    }
+    if (estabaCorriendo && !estaCorriendo) {
+      runSummaryPrint();
+    }
+    estadoPrevio = estado;
+  }
 
   if(digitalRead(PULSADOR) == LOW) {
     unsigned long t0 = millis();

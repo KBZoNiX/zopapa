@@ -23,10 +23,25 @@ array). Full functional spec: docs/FSD.html.
   bench-test telemetry/tuning workflow (`O`/`Z`/`N`/`A`/`M` commands added
   for `PLAN-speed-scheduling-v3_1.md` Phase 0/1). Keep in sync with that
   plan and with new telemetry/autotune commands as they land.
+- `docs/MANUAL-CALIBRACION.html` — companion manual in Spanish for the
+  tournament-day calibration workflow (`F`/`G`/`U` commands and the `C`
+  calibration-quality report added for `PLAN-tournament-stopgap-v1.md`).
+  Keep in sync with that plan and with `docs/Reglamento-Carreras.md`.
+- `docs/Reglamento-Carreras.md` — competition rulebook (Spanish) for the
+  league this robot races in. Notably: only phone/BT is allowed once a
+  match starts, restricted to loading configs, quick parameter tweaks, and
+  profile selection — no PC, no reflashing (§7.4). This is what motivates
+  the `tournament-stopgap` branch's gain-preset feature.
 - `PLAN-speed-scheduling-v3_1.md` — active investigation into why fixed
   PD gains under-damp at race speed; supersedes the same-named v2/v2.1/v3
   drafts. Phase 2 (decision gate) is not resolved — do not implement
   Phase 3A/3B/3C without checking its results table first.
+- `PLAN-tournament-stopgap-v1.md` — pre-competition hardening plan,
+  implemented on the `tournament-stopgap` branch off `speed-scheduled-
+  autotune`. Deliberately does not implement gain scheduling (Tier 3 of
+  that plan) — no `n` has been measured yet. Its Tier 2 items (T-S7 line-
+  loss recovery, T-S8 soft start) ship disabled by compile-time `const
+  bool` flags in `zopapa.ino` pending on-track validation.
 
 ## Build
 ```
@@ -84,6 +99,22 @@ error). Requires the user's account to be in the `dialout` group.
   so the post-release logic always resolves to Stopped — that's not a bug,
   it's how the gesture guarantees the robot never ends up driving right
   after a long press, regardless of what state it was in beforehand.
+- `autotuneRelay()` (`autotune.ino`) always tests at a fixed
+  `AUTOTUNE_SPEED_REF` (100), saving and restoring the live `SPEED` around
+  the run — added so `T` gives comparable results regardless of whatever
+  `SPEED` was set beforehand. All exit paths (edge-abort, both failure
+  returns, normal completion) restore `SPEED`; if you add another exit
+  path, restore it there too.
+- Gain presets (`presets.ino`) are a separate EEPROM region (flag at
+  40–41, data at 42–68) from the single manual KP/KD/SPEED slot
+  (`eeprom.ino`, addresses 0/4/8/12) and from calibration (1–2, 16–31) —
+  see `docs/FSD.html` §10 for the full layout. `seedPresetsIfNeeded()`
+  fills it with the §11.1 table on first boot with this layout; `activePreset`
+  (`zopapa.ino`, -1 = none) tracks which preset the live KP/KD/SPEED came
+  from, and is invalidated by any manual `K`/`D`/`V`/`L`/autotune.
+- This build has no gain-scheduling code at all (`PLAN-speed-scheduling-
+  v3_1.md` Phase 3A is not implemented) — `V` never touches KP/KD. Don't
+  assume a `gainSchedulingActive` flag exists; grep before referencing it.
 
 ## Conventions
 - Firmware comments and Serial output strings are in Spanish; keep new

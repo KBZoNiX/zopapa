@@ -327,7 +327,7 @@
         <tr><td><code>Z</code></td><td>Volcar el buffer de telemetría como CSV por el puerto serie, con una cabecera de metadatos. Reinicia el buffer al terminar — cada <code>Z</code> entrega una ventana nueva.</td><td><code>Z</code></td></tr>
         <tr><td><code>Nxxx</code></td><td>Cuántos ciclos de control saltear entre muestras guardadas (decimación). <code>N1</code> guarda todos los ciclos; valores más altos alargan la ventana de tiempo cubierta a costa de resolución.</td><td><code>N10</code></td></tr>
         <tr><td><code>Axxx</code></td><td>Amplitud fija para el relé del AutoTune (<code>T</code>), en vez de la proporcional a <code>SPEED</code> por defecto. <code>A0</code> vuelve al comportamiento normal.</td><td><code>A50</code></td></tr>
-        <tr><td><code>Mxxx</code></td><td>Tiempo máximo (ms) que el AutoTune (<code>T</code>) espera para reunir suficientes picos antes de abortar. Por defecto 2000.</td><td><code>M8000</code></td></tr>
+        <tr><td><code>Mxxx</code></td><td>Tiempo máximo (ms) que el AutoTune (<code>T</code>) espera para reunir suficientes picos antes de abortar. Por defecto 8000.</td><td><code>M8000</code></td></tr>
       </tbody>
     </table>
   </div>
@@ -485,7 +485,7 @@ dt_us,posicion,corr
     <li><strong><code>O</code> (recto, lazo abierto) no tiene parada de seguridad por pérdida de línea</strong> — a diferencia de <code>S</code>, no lee la regleta, así que no hay forma de que se detenga solo si algo sale mal. Detener a mano con <code>P</code> o el pulsador.</li>
     <li><strong>El AutoTune (<code>T</code>) sí aborta solo</strong> si la posición se acerca al borde físico de la regleta, independientemente de la velocidad o la amplitud del relé.</li>
     <li>Al usar <code>A</code> para fijar una amplitud de relé más alta que la proporcional por defecto, la excursión durante el AutoTune puede ser mayor de lo habitual — empezar con valores conservadores y subir de a poco.</li>
-    <li>Al usar <code>M</code> para alargar el timeout del AutoTune, la prueba puede correr más tiempo del acostumbrado (por defecto, hasta 2&nbsp;s) antes de que el aborto por picos insuficientes lo corte — seguir mirando el robot durante toda la ventana, no sólo el instante inicial.</li>
+    <li>Al usar <code>M</code> para alargar el timeout del AutoTune, la prueba puede correr más tiempo del acostumbrado (por defecto, hasta 8&nbsp;s) antes de que el aborto por picos insuficientes lo corte — seguir mirando el robot durante toda la ventana, no sólo el instante inicial. El límite duro es el edge-abort por posición (T1.0), no el timeout.</li>
   </ul>
 </section>
 
@@ -498,7 +498,7 @@ dt_us,posicion,corr
   <h3>El gráfico de <code>capture_telemetry.py</code> no se genera</h3>
   <p>Falta <code>matplotlib</code> (<code>pip install matplotlib</code>). El CSV se guarda igual, con o sin esa librería.</p>
   <h3>¿<code>N</code>/<code>A</code>/<code>M</code> se guardan en memoria como <code>W</code>?</h3>
-  <p>No — son valores de sesión, vuelven a sus valores por defecto (<code>N1</code>, <code>A0</code>, <code>M2000</code>) al reiniciar el robot. Sólo <code>SPEED</code>/<code>KP</code>/<code>KD</code> se guardan con <code>W</code> (<code>docs/MANUAL.html</code> sección 4).</p>
+  <p>No — son valores de sesión, vuelven a sus valores por defecto (<code>N1</code>, <code>A0</code>, <code>M8000</code>) al reiniciar el robot. Sólo <code>SPEED</code>/<code>KP</code>/<code>KD</code> se guardan con <code>W</code> (<code>docs/MANUAL.html</code> sección 4).</p>
 </section>
 
 <section id="s9">

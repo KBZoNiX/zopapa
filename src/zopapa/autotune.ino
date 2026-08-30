@@ -3,6 +3,13 @@
 // Recomendación: antes de ejecutar, coloca el robot sobre guía o con ruedas levantadas.
 void autotuneRelay() {
 
+  // Tier 0 (stopgap) / branch-independent (plan principal): corre siempre a
+  // SPEED_REF fijo, sin importar qué SPEED estuviera vigente al invocar 'T'.
+  // Restaurada en todos los puntos de salida de esta función, incluidos los
+  // aborts tempranos — ver AUTOTUNE_SPEED_REF en zopapa.ino.
+  byte speedAnterior = SPEED;
+  SPEED = AUTOTUNE_SPEED_REF;
+
   // Variables para detectar picos (max/min) en la posición (PV)
   const int maxPeaks = RELAY_SETTLE_CYCLES + RELAY_MEASURE_CYCLES + 10;
   double peakAmps[40];
@@ -44,6 +51,7 @@ void autotuneRelay() {
       motorDer.stop();
       Serial.println(F("Autotune abortado: posición cerca del borde de la regleta."));
       beep(3, 200, 9);
+      SPEED = speedAnterior;
       return;
     }
 
@@ -98,6 +106,7 @@ void autotuneRelay() {
   if (peakCount < (RELAY_SETTLE_CYCLES + 2)) {
     Serial.println(F("Autotune failed: not enough peaks detected."));
     beep(1,1000,10);
+    SPEED = speedAnterior;
     return;
   }
 
@@ -106,6 +115,7 @@ void autotuneRelay() {
   if (measured <= 1) {
     Serial.println(F("Autotune failed: insufficient measured cycles."));
     beep(1,1000,10);
+    SPEED = speedAnterior;
     return;
   }
 
@@ -145,6 +155,7 @@ void autotuneRelay() {
   // Instalar ganancias nuevas con factor de seguridad
   KP = suggestedKp * AUTOTUNE_SAFETY_FACTOR;
   KD = suggestedKd * AUTOTUNE_SAFETY_FACTOR;
+  activePreset = -1;  // T-S5: ya no coincide con el perfil que estuviera activo
 
   Serial.print(F("Installed KP = ")); Serial.println(KP, 4);
   Serial.print(F("Installed KD = ")); Serial.println(KD, 4);
@@ -152,7 +163,9 @@ void autotuneRelay() {
 
   // un pequeño beep para indicar fin
   beep(2, 100, 8);
-  
+
+  SPEED = speedAnterior;
+
 }  // FIN autotuneRelay()
 
 

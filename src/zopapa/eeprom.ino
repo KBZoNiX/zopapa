@@ -54,6 +54,7 @@ void leerConstantesPID() {
     KP = eepromReadFloat(EEPROM_ADDR_KP);
     KD = eepromReadFloat(EEPROM_ADDR_KD);
     SPEED = EEPROM.read(EEPROM_ADDR_SPEED);
+    activePreset = -1;  // T-S5: ranura manual, distinta de los perfiles
 
     Serial.println(F("Constantes PID cargadas desde EEPROM:"));
     Serial.print(F("KP = "));     Serial.println(KP);
@@ -61,7 +62,11 @@ void leerConstantesPID() {
     Serial.print(F("SPEED = "));  Serial.println(SPEED);
 
   } else {
+      // T-S4: fallback ruidoso, no silencioso — sin esto, un EEPROM sin
+      // guardar pasa desapercibido hasta que el comportamiento en pista no
+      // coincide con lo esperado.
       Serial.println(F("EEPROM no inicializada. Usando valores por defecto."));
+      beep(2, 150, 8);
   }
 }
 
@@ -119,4 +124,41 @@ bool cargarCalibracion() {
     Regleta.calibratedMaximum[i] = EEPROM.read(EEPROM_ADDR_CAL_MAX + i);
   }
   return true;
+}
+
+
+/***** Chequeo de calidad de calibración (Tier 1, T-S2 — PLAN-tournament-stopgap-v1.md) *****/
+// La iluminación del lugar del torneo no va a coincidir con la del taller, y
+// un sensor sucio o fallado corre el rango efectivo de posición sin ningún
+// síntoma obvio hasta que el robot está en la pista. Reporta min/max/spread
+// por canal y avisa si algún canal quedó con poco contraste. Puro
+// diagnóstico: no cambia nada del control. Se llama después de un barrido
+// manual (calibrarRegletaManual()) y desde el chequeo previo ('F').
+const byte CAL_SPREAD_WARN_THRESHOLD = 50;  // sobre escala 0-255 (ver ATRSensors::calibrate())
+
+void imprimirCalidadCalibracion() {
+  Serial.println(F("Calidad de calibracion (min / max / spread):"));
+  bool huboAdvertencia = false;
+
+  for (int i = 0; i < NRO_SENSORES; i++) {
+    byte cmin = Regleta.calibratedMinimum[i];
+    byte cmax = Regleta.calibratedMaximum[i];
+    byte spread = cmax - cmin;  // wrap silencioso si cmax<cmin, imposible salvo hardware roto
+
+    Serial.print(F("  S")); Serial.print(i);
+    Serial.print(F(": ")); Serial.print(cmin);
+    Serial.print(F(" / ")); Serial.print(cmax);
+    Serial.print(F(" / ")); Serial.print(spread);
+
+    if (spread < CAL_SPREAD_WARN_THRESHOLD) {
+      Serial.print(F("  <-- BAJO CONTRASTE"));
+      huboAdvertencia = true;
+    }
+    Serial.println();
+  }
+
+  if (huboAdvertencia) {
+    Serial.println(F("Advertencia: uno o mas sensores con poco contraste. Revisar suciedad/alineacion o recalibrar bajo la luz de la pista."));
+    beep(3, 150, 9);
+  }
 }

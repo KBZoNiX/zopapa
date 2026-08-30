@@ -405,12 +405,17 @@
         <tr><td><code>L</code></td><td>Cargar velocidad/ganancias guardadas en memoria</td><td><code>L</code></td></tr>
         <tr><td><code>W</code></td><td>Guardar la velocidad/ganancias actuales en memoria</td><td><code>W</code></td></tr>
         <tr><td><code>Q</code></td><td>Modo prueba: muestra continuamente la lectura cruda de los 8 sensores. Para salir, presionar el pulsador físico.</td><td><code>Q</code></td></tr>
-        <tr><td><code>C</code></td><td>Recalibrar la regleta (barrido de 3&nbsp;s, igual que el toque largo con DIP 4 desactivada)</td><td><code>C</code></td></tr>
+        <tr><td><code>C</code></td><td>Recalibrar la regleta (barrido de 3&nbsp;s, igual que el toque largo con DIP 4 desactivada); al terminar imprime además un reporte de calidad por sensor</td><td><code>C</code></td></tr>
+        <tr><td><code>F</code></td><td>Chequeo previo: calibración, EEPROM, perfil activo, ganancias vigentes y período del loop, en una sola pantalla</td><td><code>F</code></td></tr>
+        <tr><td><code>Gx</code></td><td>Cargar el perfil de ganancia <code>x</code> (1–3) a velocidad/KP/KD</td><td><code>G2</code></td></tr>
+        <tr><td><code>Ux</code></td><td>Guardar la velocidad/ganancias actuales en el perfil <code>x</code> (1–3)</td><td><code>U2</code></td></tr>
         <tr><td><code>H</code></td><td>Mostrar la lista de comandos</td><td><code>H</code></td></tr>
       </tbody>
     </table>
   </div>
   <div class="note"><b>La mayoría de los comandos sólo se procesan con el robot Detenido</b> Mientras está en marcha, el único comando que se acepta es <code>P</code> (Detener), por seguridad — los demás se ignoran hasta detenerlo.</div>
+  <div class="note"><b>Calibración y perfiles de torneo</b> El reporte de calidad de <code>C</code>, el chequeo previo <code>F</code>, y los perfiles <code>G</code>/<code>U</code> tienen su propio manual con la rutina paso a paso: <code>docs/MANUAL-CALIBRACION.html</code>.</div>
+  <p>Además del robot, existe un modo de sólo lectura (<code>O</code>), volcado de telemetría (<code>Z</code>) y parámetros de banco de pruebas (<code>N</code>/<code>A</code>/<code>M</code>) pensados para sesiones de ajuste con PC, no para el uso diario — documentados en <code>docs/MANUAL-TELEMETRIA.html</code>.</p>
 </section>
 
 <section id="s6">
