@@ -8,13 +8,18 @@ parameter tweaks from a phone — matching what `docs/Reglamento-Carreras.md`
 §7.4 actually allows during a match.
 
 Two screens:
-- **Home** — Start/Stop, gain presets (load/save), manual KP/KD/Speed,
+- **Home** — gain presets (load/save), manual KP/KD/Speed, Start/Stop,
   Preflight, Calibrate, AutoTune, and an auto-populating run summary after
   each stop. This is the only screen meant for use during a match.
 - **Advanced/Practice** — the rest of the protocol (sensor bar test,
   open-loop drive, telemetry dump, decimation/relay-amplitude/autotune-
   timeout tuning, the separate manual EEPROM slot, and a raw command
   terminal). Bench/practice only — see the in-app warning banner.
+
+Dark theme (black ground, red for primary actions/Start-Stop, blue for
+Preflight/Calibrar/AutoTune, yellow for the active-preset highlight) and app
+icon match the robot artwork in `assets/`; see `lib/main.dart`'s
+`_zopapaTheme()` if you need to touch colors.
 
 ## Prerequisites
 
@@ -85,10 +90,51 @@ multi-ABI APK also helps a lot on constrained machines.
 ## Build status
 
 `flutter analyze`, `flutter test` (16 tests, all in `test/parsers_test.dart`),
-`flutter build apk --debug`, and `flutter build apk --release` all pass as
-of this writing. The parser tests actually caught three real bugs before
-this was ever run against hardware — worth knowing about if you touch
-`lib/protocol/parsers.dart`:
+`flutter build apk --debug`, and `flutter build apk --release` all pass as of
+this writing. The app has since been run against the real robot (a
+Bluetooth-paired HC-05-style module, phone-side testing on a Samsung Galaxy
+S22) — connect, Preflight, Calibrate, preset load/save, manual gains, and
+Start/Stop (motors confirmed spinning, both closed-loop `S` and open-loop
+`O`) all verified working end-to-end. AutoTune and the Advanced screen's
+bench commands (`Q`/`Z`/`N`/`A`/`M`/`L`/`W`, raw terminal) have not yet been
+exercised live — see "Known gaps" below.
+
+That first hardware pass caught real bugs no amount of unit testing would
+have — worth knowing about if you touch `android/app/.../BtLink.kt` or
+`lib/protocol/`:
+- **Crash on every connect attempt**: `BtLink.connect()` called
+  `BluetoothAdapter.cancelDiscovery()` before opening the socket (a common
+  "just in case" precaution), which throws `SecurityException` unless the
+  app holds `BLUETOOTH_SCAN` — a permission this app deliberately never
+  requests, since it only connects to already-bonded devices and has no
+  discovery UI. Fixed by removing the call.
+- **Every command after the first connect hung forever, with no error and
+  no timeout**: `connect()` and `write()` shared one single-thread
+  executor, but `connect()`'s task ended by running the *blocking* read
+  loop inline, on that same thread — which never returns for the life of
+  the connection. That permanently starved the executor, so `write()`
+  could never be scheduled again. Confirmed by adding temporary
+  instrumentation showing the write task's start timestamp stuck at zero
+  while the read loop sat blocked on its first `read()`. Fixed by moving
+  the read loop to its own dedicated thread.
+- **Calibrate always ran out its full timeout, right around when the
+  physical 3-second sweep actually finished**: `BtLink`'s read loop
+  decoded incoming bytes one-at-a-time via `Byte.toChar()`, which mangles
+  multi-byte UTF-8 sequences. The firmware's Spanish strings are UTF-8, and
+  `'Calibración finalizada.'` contains `ó` (2 bytes) — so the exact-string
+  match the app waits for never succeeded. Fixed by buffering raw bytes
+  per line and decoding as UTF-8 only once a full line is available.
+- **Manual KP/KD/Speed fields kept showing stale typed values after
+  loading a preset**: the fields relied on `TextField`'s `hintText` to
+  show live values, but Material only reveals `hintText` once the field's
+  label floats (on focus or non-empty text) — so an untouched field just
+  showed its label, and a previously-edited one kept showing whatever was
+  typed, forever. Fixed by writing the live value into the controller's
+  text directly whenever `lastGains` changes from something other than
+  that field's own edit.
+
+Also from the earlier, hardware-independent unit-test pass — three parser
+bugs in `lib/protocol/parsers.dart`, worth knowing about if you touch it:
 - `parsePreflightBlock`/`parseRunSummaryBlock` checked "activo"/"activa"
   via `.contains(...)`, which false-positives on "des**activo**"/
   "des**activa**da" — fixed with an exact-match-after-the-colon check
@@ -100,22 +146,30 @@ this was ever run against hardware — worth knowing about if you touch
   `(>=340)`, which a naive first-`=`-in-the-line regex matched before the
   real `= <n>` assignment — fixed by anchoring on the `)` that precedes it.
 
-This is a strong argument for not trusting hand-written protocol parsers
-without tests, even ones that look obviously correct on read-through.
+This is a strong argument for not trusting hand-written protocol/transport
+code without tests and a real device, even code that looks obviously
+correct on read-through.
 
 ## Known gaps / things to verify on real hardware
 
-None of the above has touched an actual robot yet — only unit tests against
-hand-transcribed sample strings and a build/compile check. Specifically:
-
-- The exact multi-line shape of a few responses (autotune failure paths,
-  whether "AutoTune Finalizado." always prints) was inferred from the
-  firmware research rather than captured from a live device — if `T`
-  responses don't parse cleanly, check `parseAutotuneBlock` in
-  `lib/protocol/parsers.dart` against what the robot actually sends.
+- **AutoTune** (`T`) has not been run against the live robot — the exact
+  multi-line response shape (failure paths, whether "AutoTune Finalizado."
+  always prints) was inferred from firmware research rather than captured
+  from a device. If `T` responses don't parse cleanly, check
+  `parseAutotuneBlock` in `lib/protocol/parsers.dart` against what the
+  robot actually sends.
+- The Advanced/Practice screen's bench commands (`Q`, `Z`, `N`, `A`, `M`,
+  `L`, `W`, and the raw terminal) haven't been exercised live either —
+  lower priority since none of them are legal mid-match per
+  `docs/Reglamento-Carreras.md` §7.4, but worth a pass before relying on
+  them for practice sessions.
 - No battery-voltage/status query exists in the firmware, so the app can't
   show battery level.
 - `Q` (sensor bar test) blocks the whole firmware, not just the run state —
   the app sends it via `sendRaw` (bypasses the command queue) precisely so
   it doesn't hang everything else waiting for a reply that won't come until
   someone presses the physical pushbutton.
+- Release builds are currently signed with the debug keystore
+  (`android/app/build.gradle.kts`'s `signingConfig` for the `release`
+  build type is still the Flutter template's placeholder) — fine for
+  sideloading onto your own phone, not set up for wider distribution.

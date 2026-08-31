@@ -122,6 +122,10 @@ error). Requires the user's account to be in the `dialout` group.
 - This build has no gain-scheduling code at all (`PLAN-speed-scheduling-
   v3_1.md` Phase 3A is not implemented) — `V` never touches KP/KD. Don't
   assume a `gainSchedulingActive` flag exists; grep before referencing it.
+- `btProcessCommand()`'s `S`/`P`/`O` cases (`bt.ino`) call `indicar_estado()`
+  after replying — added so BT-triggered start/stop get the same LED/beep
+  feedback as the physical pushbutton, which previously only fired from the
+  button's own code path in `zopapa.ino`'s `loop()`.
 
 ## Conventions
 - Firmware comments and Serial output strings are in Spanish; keep new
