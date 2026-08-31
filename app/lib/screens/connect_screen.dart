@@ -68,42 +68,51 @@ class _ConnectScreenState extends State<ConnectScreen> {
     final devices = _devices;
     return Scaffold(
       appBar: AppBar(title: const Text('Zopapa Control')),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: devices == null
-            ? const Center(child: CircularProgressIndicator())
-            : ListView(
-                children: [
-                  if (_error != null)
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+      body: Column(
+        children: [
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _load,
+              child: devices == null
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView(
+                      children: [
+                        if (_error != null)
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                          ),
+                        if (devices.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Text(
+                              'No hay dispositivos Bluetooth emparejados. Emparejá el módulo del robot '
+                              'desde los ajustes de Bluetooth de Android primero (una sola vez).',
+                            ),
+                          ),
+                        for (final device in devices)
+                          ListTile(
+                            leading: Icon(device.address == _lastAddress ? Icons.star : Icons.bluetooth),
+                            title: Text(device.name),
+                            subtitle: Text(device.address),
+                            trailing: _connectingAddress == device.address
+                                ? const SizedBox(
+                                    width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                                : null,
+                            onTap: _connectingAddress == null ? () => _connect(device.address) : null,
+                          ),
+                      ],
                     ),
-                  if (devices.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Text(
-                        'No hay dispositivos Bluetooth emparejados. Emparejá el módulo del robot '
-                        'desde los ajustes de Bluetooth de Android primero (una sola vez).',
-                      ),
-                    ),
-                  for (final device in devices)
-                    ListTile(
-                      leading: Icon(device.address == _lastAddress ? Icons.star : Icons.bluetooth),
-                      title: Text(device.name),
-                      subtitle: Text(device.address),
-                      trailing: _connectingAddress == device.address
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                          : null,
-                      onTap: _connectingAddress == null ? () => _connect(device.address) : null,
-                    ),
-                  const SizedBox(height: 32),
-                  Opacity(
-                    opacity: 0.85,
-                    child: Image.asset('assets/images/zopapa_app_sticker.png', height: 90, fit: BoxFit.contain),
-                  ),
-                ],
-              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Opacity(
+              opacity: 0.85,
+              child: Image.asset('assets/images/zopapa_app_sticker.png', height: 90, fit: BoxFit.contain),
+            ),
+          ),
+        ],
       ),
     );
   }
