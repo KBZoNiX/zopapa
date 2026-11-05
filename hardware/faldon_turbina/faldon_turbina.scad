@@ -18,8 +18,12 @@
 // Ver README.md para medir, imprimir y montar.
 
 /* [Medidas a ajustar] */
-// Distancia de la cara inferior de la placa a la pista, con el robot apoyado (mm). MEDIRLA.
-altura_libre = 8.0;
+// Altura de la pista a la cara SUPERIOR de la placa en su borde delantero, con la
+// turbina andando o apretando la turbina para simular la succión (mm). MEDIRLA.
+altura_borde_delantero = 7.0;
+// Lo mismo en el borde trasero de la placa (mm). La placa va inclinada porque la
+// regleta apoya más bajo que las ruedas.
+altura_borde_trasero = 11.0;
 // Luz entre la punta de las aletas y la pista (mm).
 luz = 0.5;
 // Espesor de la bandeja (mm).
@@ -65,6 +69,8 @@ PCB_X1 = 154.912;
 PCB_Y1 = 153.134;
 R_ESQ_PCB = 6;
 MARGEN = 0.9;               // retiro de la bandeja respecto del borde de la placa
+PCB_Y0 = 61.074;            // borde delantero de la placa
+ESPESOR_PCB = 1.6;
 
 // Contorno de la bandeja. Estos valores salen de las holguras a los pines THT
 // que asoman por abajo (A1 hasta y=87,9; J2 hasta x=103,5; J3 desde x=142,8;
@@ -81,8 +87,19 @@ RUEDA_D = 32;
 RUEDA_ANCHO = 20;
 TROCHA = 95;                // entre centros de rueda
 
-ALTURA_ALETA = altura_libre - espesor_bandeja - luz;
-assert(ALTURA_ALETA > 1, "altura_libre demasiado chica para este espesor de bandeja y luz");
+// Altura libre (pista -> cara inferior de la placa) en la coordenada y de KiCad. La
+// pista es un plano inclinado respecto de la placa: las puntas de las aletas lo siguen
+// a una luz constante, así la boca de la cámara queda paralela al piso y la succión
+// tira derecho hacia abajo, sin componente que frene.
+PENDIENTE = (altura_borde_trasero - altura_borde_delantero) / (PCB_Y1 - PCB_Y0);
+function altura_libre(y) = altura_borde_delantero - ESPESOR_PCB + PENDIENTE * (y - PCB_Y0);
+
+// Largo vertical de aleta en el frente del cuello (la más corta) y detrás (la más larga).
+ALETA_MIN = altura_libre(Y_FRENTE) - espesor_bandeja - luz;
+ALETA_MAX = altura_libre(PCB_Y1 + 5) - espesor_bandeja - luz;
+assert(ALETA_MIN > 1, "altura libre demasiado chica adelante para este espesor de bandeja y luz");
+// Probeta: altura de aleta bajo el centro de la turbina.
+ALTURA_ALETA = altura_libre(CY) - espesor_bandeja - luz;
 
 // ---- 2D ----
 module rrect(x0, y0, x1, y1, r)
@@ -120,17 +137,28 @@ module bandeja() {
             }
 }
 
+// Semiespacio por encima del plano z = luz - altura_libre(y) (en una caja grande).
+module sobre_plano(dz_plano) {
+    multmatrix([[1, 0, 0, 0], [0, 1, 0, 0],
+                [0, -PENDIENTE, 1, -(altura_borde_delantero - ESPESOR_PCB - PENDIENTE * PCB_Y0) + dz_plano]])
+        translate([60, 40, 0]) cube([130, 140, 30]);
+}
+
 module aletas() {
-    n = ceil(ALTURA_ALETA / paso_capa);
-    dz = ALTURA_ALETA / n;
-    for (i = [0 : n - 1]) {
-        s = (i + 0.5) * dz;
-        translate([0, 0, -espesor_bandeja - (i + 1) * dz])
-            linear_extrude(height = dz + 0.01)
-                difference() {
-                    contorno(s);
-                    offset(delta = -ancho_aleta) contorno(s);
-                }
+    // Se generan todas con el largo de la más larga y se recortan con el plano de la pista.
+    n = ceil(ALETA_MAX / paso_capa);
+    dz = ALETA_MAX / n;
+    intersection() {
+        for (i = [0 : n - 1]) {
+            s = (i + 0.5) * dz;
+            translate([0, 0, -espesor_bandeja - (i + 1) * dz])
+                linear_extrude(height = dz + 0.01)
+                    difference() {
+                        contorno(s);
+                        offset(delta = -ancho_aleta) contorno(s);
+                    }
+        }
+        sobre_plano(luz);
     }
 }
 
@@ -171,12 +199,12 @@ module pines_ref() {
 module ruedas_ref() {
     color("DimGray", 0.6)
         for (sx = [-1, 1])
-            translate([CX + sx * TROCHA / 2 - 0.19, EJE_Y, RUEDA_D / 2 - altura_libre])
+            translate([CX + sx * TROCHA / 2 - 0.19, EJE_Y, RUEDA_D / 2 - altura_libre(EJE_Y)])
                 rotate([0, 90, 0]) cylinder(d = RUEDA_D, h = RUEDA_ANCHO, center = true);
 }
 
 module pista_ref() {
-    color("White", 0.25) translate([70, 55, -altura_libre - 0.5]) cube([105, 105, 0.5]);
+    color("White", 0.25) difference() { sobre_plano(-0.5); sobre_plano(0); }
 }
 
 // ---- Probeta: tres aletas rectas (0,45 / 0,6 / 0,9 mm) con la misma inclinación
@@ -211,4 +239,6 @@ if (pieza == "imprimir") {
     probeta();
 }
 
-echo(str("Altura de aleta: ", ALTURA_ALETA, " mm"));
+echo(str("Inclinación: ", atan(PENDIENTE), "°. Altura libre: ", altura_libre(Y_FRENTE),
+          " mm adelante del faldón, ", altura_libre(CY), " en la turbina, ",
+          altura_libre(PCB_Y1), " atrás. Aletas de ", ALETA_MIN, " a ", ALETA_MAX, " mm."));

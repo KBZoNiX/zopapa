@@ -17,8 +17,11 @@ array). Full functional spec: docs/FSD.html.
 - `hardware/line_sensor_pcb/` — ATR-8A sensor PCB, KiCad project.
 - `hardware/faldon_turbina/` — parametric OpenSCAD model of the TPU suction
   skirt that bolts under the main PCB around the turbine (coordinates taken
-  from `Rapiduino.kicad_pcb`). The bundled STLs assume 8 mm ground clearance;
-  regenerate with the measured `altura_libre` — see its `README.md`.
+  from `Rapiduino.kicad_pcb`). The board is pitched nose-down (the sensor bar
+  rests lower than the wheels), so fin tips follow an inclined floor plane set by
+  two measured heights (`altura_borde_delantero`/`_trasero`, floor to PCB top
+  face, with suction simulated). Bundled `*_d7_t11.stl` = 7 / 11 mm, measured
+  2026-11-05; re-measure if the front zip ties change — see its `README.md`.
 - `app/` — Zopapa Control, the Flutter/Android companion app for the BT
   command protocol in `src/zopapa/bt.ino` (start/stop, gain presets,
   preflight, calibration, plus the fuller bench-test/telemetry commands
