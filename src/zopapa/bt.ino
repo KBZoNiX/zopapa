@@ -114,8 +114,8 @@ void btProcessCommand(String cmd) {
       break;
 
     case 'S':
-      estado = true;
-      Serial.println(F("Arrancando..."));
+      estado = estadoDeArranque();  // 2 (turbina) si DIP 4 activada
+      Serial.println(estado == 2 ? F("Arrancando con turbina...") : F("Arrancando..."));
       indicar_estado(estado);  // LED/beep — antes sólo el pulsador los disparaba
       break;
 

@@ -478,11 +478,11 @@
         <tr><td>D1</td><td>TX</td><td>out</td><td>Shared: USB programming + Bluetooth (J5); passes through R5/R6 divider, 5&nbsp;V→≈3.3&nbsp;V, before reaching the BT module's RX</td></tr>
         <tr><td>D2</td><td>PULSADOR</td><td>in, pull-up</td><td>Main pushbutton SW2; also broken out at J7 "Start"</td></tr>
         <tr><td>D3 <span class="pin">*</span></td><td>MA02</td><td>out</td><td>Left motor driver input 2, via A2 → J8</td></tr>
-        <tr><td>D4</td><td>DIP_SW4</td><td>in, pull-up</td><td>Autotune arm switch</td></tr>
+        <tr><td>D4</td><td>DIP_SW4</td><td>in, pull-up</td><td>Turbine enable (button and BT <code>S</code> starts)</td></tr>
         <tr><td>D5 <span class="pin">*</span></td><td>TURBINA</td><td>out</td><td>Gate of Q1 → turbine, via J2 / boost conv. J3-J4</td></tr>
-        <tr><td>D6</td><td>DIP_SW3</td><td>in, pull-up</td><td>Turbine enable</td></tr>
-        <tr><td>D7</td><td>DIP_SW2</td><td>in, pull-up</td><td>"Increase KP/KD" — defined, unused (§13)</td></tr>
-        <tr><td>D8</td><td>DIP_SW1</td><td>in, pull-up</td><td>"Increase speed" — defined, unused (§13)</td></tr>
+        <tr><td>D6</td><td>DIP_SW3</td><td>in, pull-up</td><td>Force-load gain profile 3 at boot</td></tr>
+        <tr><td>D7</td><td>DIP_SW2</td><td>in, pull-up</td><td>Force-load gain profile 2 at boot</td></tr>
+        <tr><td>D8</td><td>DIP_SW1</td><td>in, pull-up</td><td>Force-load gain profile 1 at boot</td></tr>
         <tr><td>D9 <span class="pin">*</span></td><td>MB01</td><td>out</td><td>Right motor driver input 1, via A2 → J9</td></tr>
         <tr><td>D10 <span class="pin">*</span></td><td>MB02</td><td>out</td><td>Right motor driver input 2, via A2 → J9</td></tr>
         <tr><td>D11 <span class="pin">*</span></td><td>MA01</td><td>out</td><td>Left motor driver input 1, via A2 → J8</td></tr>
@@ -542,10 +542,10 @@
       </tbody>
     </table>
   </div>
-  <p>A short press of the pushbutton cycles Stopped → Running (or Running+Turbine, if DIP_SW3 reads LOW at the moment of the press) → Stopped. Holding the button ≥2&nbsp;s does something else entirely, gated by DIP_SW4: with DIP_SW4 LOW it <strong>saves</strong> the current KP/KD/SPEED to EEPROM; with DIP_SW4 HIGH it instead runs a fresh sensor calibration sweep (same as the <code>C</code> serial command, §9). Neither path launches autotune itself — that only happens at boot, or via the <code>T</code> serial command. Both long-press branches set <code>estado&nbsp;=&nbsp;1</code> mid-hold as a deliberate trick: the button handler's post-release logic (<code>if&nbsp;(estado&nbsp;!=&nbsp;0)&nbsp;estado&nbsp;=&nbsp;0</code>) then always resolves to Stopped on release, regardless of what state the robot was in before the hold started — so both long-press actions leave the robot Stopped afterward, never mid-drive.</p>
+  <p>A short press of the pushbutton cycles Stopped → Running (or Running+Turbine, if DIP_SW4 reads LOW at the moment of the press; the serial <code>S</code> command uses the same rule via <code>estadoDeArranque()</code>) → Stopped. Holding the button ≥2&nbsp;s runs a fresh sensor calibration sweep (same as the <code>C</code> serial command, §9), regardless of DIP position. Saving KP/KD/SPEED is serial-only (<code>W</code>). Autotune is serial-only too (<code>T</code>). The long-press branch sets <code>estado&nbsp;=&nbsp;1</code> mid-hold as a deliberate trick: the button handler's post-release logic (<code>if&nbsp;(estado&nbsp;!=&nbsp;0)&nbsp;estado&nbsp;=&nbsp;0</code>) then always resolves to Stopped on release, regardless of what state the robot was in before the hold started — so the long-press leaves the robot Stopped afterward, never mid-drive.</p>
 
   <h3>7.2 Startup &amp; calibration</h3>
-  <p>On reset: if a valid sensor calibration is stored in EEPROM (§10), it loads directly and the boot continues immediately. Otherwise, a beep/LED intro is followed by a fixed 3-second manual calibration window (sensor bar min/max learning) during which the operator sweeps the array across the line — the result is then saved to EEPROM so the sweep isn't needed again next boot. The <code>C</code> serial command and the long-press + DIP_SW4-HIGH gesture (§9, §7.1) both force a fresh sweep on demand at any later point — <code>calibrarRegletaManual()</code> explicitly frees and re-nulls <code>Regleta.calibratedMinimum</code>/<code>calibratedMaximum</code> first, so the sweep starts from a clean state rather than only ever widening whatever range was already loaded (that was a real bug here — see the note below). If <code>EEPROM_AUTOLOAD</code> is set, saved KP/KD/SPEED also load from EEPROM (independently of the calibration data). If DIP_SW4 reads LOW, a 5-second window opens for a button press to launch autotune before falling through to normal Stopped state.</p>
+  <p>On reset: if a valid sensor calibration is stored in EEPROM (§10), it loads directly and the boot continues immediately. Otherwise, a beep/LED intro is followed by a fixed 3-second manual calibration window (sensor bar min/max learning) during which the operator sweeps the array across the line — the result is then saved to EEPROM so the sweep isn't needed again next boot. The <code>C</code> serial command and the long-press gesture (§9, §7.1) both force a fresh sweep on demand at any later point — <code>calibrarRegletaManual()</code> explicitly frees and re-nulls <code>Regleta.calibratedMinimum</code>/<code>calibratedMaximum</code> first, so the sweep starts from a clean state rather than only ever widening whatever range was already loaded (that was a real bug here — see the note below). If <code>EEPROM_AUTOLOAD</code> is set, saved KP/KD/SPEED also load from EEPROM (independently of the calibration data). Finally, <code>cargarPerfilPorDip()</code> force-loads a gain profile (§11) if exactly one of DIP_SW1/2/3 reads LOW; with none active the compile-time defaults stay; with more than one active no profile is loaded and a 4-beep error is given.</p>
   <div class="note"><b>Fixed: calibration was cumulative, not a true reset</b> <code>ATRSensors::calibrate()</code> only resets the calibrated min/max to their sentinel starting values when those arrays are currently unallocated (<code>NULL</code>) — otherwise it only ever widens them. Because a manual recalibration ran on top of whatever calibration <code>cargarCalibracion()</code> had already loaded from EEPROM, every "fresh" sweep was actually a union with the previous one: min could only shrink, max could only grow, monotonically, until a full power-cycle. Verified on hardware — two consecutive recalibrations under the old code produced a max that climbed from ~220 to ~250 across all 8 channels instead of resetting. <code>calibrarRegletaManual()</code> now frees the arrays before sweeping, forcing the library's own null-check to reinitialize them.</div>
 
   <h3>7.3 Steering control loop</h3>
@@ -565,11 +565,11 @@
   <h2><span class="num">8.</span> Autotune subsystem</h2>
   <p>Implements the relay-feedback (Åström–Hägglund) method to derive PD gains from an induced, self-sustaining steering oscillation.</p>
   <ol class="plain">
-    <li><strong>Trigger.</strong> Either (a) at boot, if DIP_SW4 is LOW, a 5&nbsp;s window opens for a button press to start it, or (b) any time via the <code>T</code> serial command.</li>
+    <li><strong>Trigger.</strong> Only via the <code>T</code> serial command (the former boot-time DIP_SW4 window was removed).</li>
     <li><strong>Excitation.</strong> Steering correction is forced to a fixed-amplitude square wave (<code>d</code> = 0.5×SPEED), flipping sign each time a peak in line position is detected, sustaining oscillation.</li>
     <li><strong>Measurement.</strong> The first 3 peaks are discarded (settling); the next 6 peaks' amplitude (<code>a</code>) and period (<code>Pu</code>) are averaged.</li>
     <li><strong>Gain calculation.</strong> Ultimate gain <code>Ku = 4d / (π·a)</code>; Ziegler–Nichols PD rule gives <code>Kp = 0.8·Ku</code>, <code>Kd = Ku·Pu/8</code>, both scaled by a 0.9 safety factor before being installed into RAM.</li>
-    <li><strong>Persistence.</strong> New gains live in RAM only — nothing is written to EEPROM until the operator explicitly commits via the long-press gesture (§7.1) or the <code>W</code> serial command.</li>
+    <li><strong>Persistence.</strong> New gains live in RAM only — nothing is written to EEPROM until the operator explicitly commits via the <code>W</code> serial command.</li>
   </ol>
   <div class="note"><b>Comment vs. code mismatch</b> The safety timeout constant is <code>2000&nbsp;ms</code> (2&nbsp;s), but the adjacent source comment reads "25 s timeout". The 2&nbsp;s value is what actually governs the abort.</div>
 </section>
@@ -596,7 +596,6 @@
       </tbody>
     </table>
   </div>
-  <div class="note"><b>Behavioral asymmetry</b> The <code>S</code> command always enters plain Running state — it never checks DIP_SW3 to enter Running+Turbine, unlike the pushbutton path in §7.1. Turbine mode is reachable via the button but not via a serial start.</div>
 </section>
 
 <section id="s10">
@@ -660,10 +659,10 @@
     <table>
       <thead><tr><th>Switch</th><th>Pin</th><th>Labeled function</th><th>Implemented?</th></tr></thead>
       <tbody>
-        <tr><td>DIP 1</td><td>D8</td><td>Increase speed</td><td><span class="pill">defined, unused</span></td></tr>
-        <tr><td>DIP 2</td><td>D7</td><td>Increase KP/KD</td><td><span class="pill">defined, unused</span></td></tr>
-        <tr><td>DIP 3</td><td>D6</td><td>Enable turbine</td><td><span class="pill on">active</span> — checked on state-cycle button press</td></tr>
-        <tr><td>DIP 4</td><td>D4</td><td>Arm autotune (LOW) / dual-purpose during a long button-press (§7.1): LOW saves KP/KD/SPEED, HIGH recalibrates the sensor</td><td><span class="pill on">active</span> — checked at boot and during every long button-press</td></tr>
+        <tr><td>DIP 1</td><td>D8</td><td>Force-load gain profile 1 (<code>G1</code>) at boot</td><td><span class="pill on">active</span> — read once in <code>setup()</code></td></tr>
+        <tr><td>DIP 2</td><td>D7</td><td>Force-load gain profile 2 (<code>G2</code>) at boot</td><td><span class="pill on">active</span> — read once in <code>setup()</code></td></tr>
+        <tr><td>DIP 3</td><td>D6</td><td>Force-load gain profile 3 (<code>G3</code>) at boot</td><td><span class="pill on">active</span> — read once in <code>setup()</code></td></tr>
+        <tr><td>DIP 4</td><td>D4</td><td>Turbine enable: LOW makes both the button and serial <code>S</code> start in Running+Turbine</td><td><span class="pill on">active</span> — read at each start</td></tr>
       </tbody>
     </table>
   </div>
@@ -672,11 +671,9 @@
 <section id="s13">
   <h2><span class="num">13.</span> Assumptions &amp; open items</h2>
   <ul class="finding-list">
-    <li><span class="tag">Firmware — dead code</span>DIP_SW1 ("increase speed") and DIP_SW2 ("increase KP/KD") are wired and initialized as inputs but never read anywhere beyond <code>pinMode()</code> — the two switch positions currently do nothing.</li>
     <li><span class="tag">Firmware — dead code</span><code>debug_macros.h</code> defines DBG_PRINT macros gated on <code>DEBUG==1</code>, but the header is not <code>#include</code>d by any <code>.ino</code> file.</li>
     <li><span class="tag">Naming</span>The steering controller is P+D only (no integral term) despite being called "PID" throughout code, comments, and this repo's naming.</li>
     <li><span class="tag">Comment vs. code</span>Autotune timeout comment says "25 s" next to a constant that is actually 2000&nbsp;ms.</li>
-    <li><span class="tag">Command asymmetry</span>Serial <code>S</code> (start) never enters Running+Turbine state, unlike the pushbutton path which honors DIP_SW3.</li>
     <li><span class="tag">Provenance</span>Both vendored libraries (<code>src/libraries/DRV8833</code>, <code>src/libraries/ATRSensors</code>) are first-party code, not the SparkFun/Pololu libraries the same or similar names might suggest; <code>ATRSensors</code> is explicitly a modified, speed-optimized fork of Pololu's QTRSensors and retains its original CC BY-SA&nbsp;3.0 notice.</li>
     <li><span class="tag">Unresolved</span>Exact Bluetooth module part number is not specified — J5 is a generic 4-pin header (VCC/GND/TX/RX assumed by convention).</li>
     <li><span class="tag">Unresolved</span>No revision, author, or date metadata found in either KiCad project — board revision history is not recoverable from the files present.</li>

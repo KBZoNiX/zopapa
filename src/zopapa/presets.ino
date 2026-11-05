@@ -63,3 +63,24 @@ void guardarPreset(byte idx) {
 
   Serial.print(F("KP/KD/SPEED actuales guardados en perfil ")); Serial.println(idx + 1);
 }
+
+// Carga al arrancar el perfil indicado por DIP 1/2/3 (activada = LOW).
+// Una sola activada: la carga. Ninguna: no toca nada. Más de una: no carga
+// ninguna, avisa por Serial y da un beep de error.
+void cargarPerfilPorDip() {
+  const int pines[PRESET_COUNT] = { DIP_SW1, DIP_SW2, DIP_SW3 };
+  int activos = 0;
+  int elegido = -1;
+  for (byte i = 0; i < PRESET_COUNT; i++) {
+    if (digitalRead(pines[i]) == LOW) {
+      activos++;
+      elegido = i;
+    }
+  }
+  if (activos == 1) {
+    cargarPreset((byte)elegido);
+  } else if (activos > 1) {
+    Serial.println(F("Mas de una llave DIP de perfil activa: no se carga ningun perfil."));
+    beep(4, 80, 8);
+  }
+}

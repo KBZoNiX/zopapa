@@ -82,9 +82,12 @@ error). Requires the user's account to be in the `dialout` group.
   control loop.
 - Serial and Bluetooth share one UART (9600 baud); R5/R6 on the main PCB
   level-shift the Nano's 5V TX line to ~3.3V for the BT module's RX.
-- DIP switches 1 & 2 (D8/D7 — "increase speed" / "increase KP/KD") are
-  wired and initialized but never read anywhere in the firmware —
-  currently dead.
+- DIP switches (active = LOW, `INPUT_PULLUP`): 1/2/3 (D8/D7/D6) force-load
+  gain preset 1/2/3 at boot via `cargarPerfilPorDip()` (`presets.ino`, called
+  from `setup()`); none active = compile-time defaults, more than one = no
+  load + 4-beep error. DIP 4 (D4) enables the turbine for both the
+  pushbutton and BT `S` starts, through `estadoDeArranque()` (`zopapa.ino`).
+  There is no DIP-triggered autotune anymore — `T` over BT only.
 - `debug_macros.h` is not `#include`d anywhere — currently dead.
 - `maxCorrection()`/`relayAmplitude()` in `zopapa.ino` (formerly
   `MAX_CORRECTION`/`RELAY_AMPLITUDE` consts) recompute from `SPEED` on
@@ -100,12 +103,12 @@ error). Requires the user's account to be in the `dialout` group.
   `NULL` — otherwise it just widens whatever range was already loaded, so
   a "fresh" recalibration silently became a monotonic union with the old
   one. Confirmed on hardware by comparing two consecutive recalibrations.
-- The long-press pushbutton gesture (`zopapa.ino` `loop()`) is dual-purpose
-  via DIP_SW4: LOW saves KP/KD/SPEED to EEPROM, HIGH runs the same
-  recalibration as `C`. Both branches deliberately set `estado = 1` mid-hold
-  so the post-release logic always resolves to Stopped — that's not a bug,
-  it's how the gesture guarantees the robot never ends up driving right
-  after a long press, regardless of what state it was in beforehand.
+- The long-press pushbutton gesture (`zopapa.ino` `loop()`) runs the same
+  recalibration as `C`, regardless of DIP position (saving KP/KD/SPEED is BT
+  `W` only). It deliberately sets `estado = 1` mid-hold so the post-release
+  logic always resolves to Stopped — that's not a bug, it's how the gesture
+  guarantees the robot never ends up driving right after a long press,
+  regardless of what state it was in beforehand.
 - `autotuneRelay()` (`autotune.ino`) always tests at a fixed
   `AUTOTUNE_SPEED_REF` (100), saving and restoring the live `SPEED` around
   the run — added so `T` gives comparable results regardless of whatever

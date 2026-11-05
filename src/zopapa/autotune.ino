@@ -167,25 +167,3 @@ void autotuneRelay() {
   SPEED = speedAnterior;
 
 }  // FIN autotuneRelay()
-
-
-//Función para confirmar inicio del modo autotune
-void confirmarInicioAutoTune() {
-
-  Serial.println(F("DIP_SW4 activado. Presione el pulsador para iniciar AutoTune..."));
-
-  unsigned long tiempoInicio = millis();
-  while (millis() - tiempoInicio < 5000) {  // Ventana de 5 segundos para presionar el botón
-    if (digitalRead(PULSADOR) == LOW) {     // Botón presionado
-      Serial.println(F("Iniciando AutoTune PID..."));
-     
-      digitalWrite(LED, HIGH);
-      beep(5, 1000, 7);
-      autotuneRelay();  // Llamada al autotune
-      digitalWrite(LED, LOW);
-      return;
-    }
-  }
-  
-  Serial.println(F("No se presionó el pulsador. Inicio normal."));
-}  

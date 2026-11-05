@@ -91,10 +91,10 @@ const int PULSADOR = 2;
 const int TURBINA = 5;
 const int LED = 12;
 const int BUZZER = 13;
-const int DIP_SW1 = 8;  // Incrementar velocidad
-const int DIP_SW2 = 7;  // Incrementar KP y KD
-const int DIP_SW3 = 6;  // Habilita turbina
-const int DIP_SW4 = 4;  // Autotune
+const int DIP_SW1 = 8;  // Fuerza carga del perfil 1 al arrancar
+const int DIP_SW2 = 7;  // Fuerza carga del perfil 2 al arrancar
+const int DIP_SW3 = 6;  // Fuerza carga del perfil 3 al arrancar
+const int DIP_SW4 = 4;  // Habilita turbina (arranque por pulsador o por BT 'S')
 
 // Configuración de motores:
 DRV8833 motorIzq(11, 3);  // pines del Arduino que utiliza el motor izquierdo
@@ -233,10 +233,11 @@ void setup() {
   // valores de la tabla §11.1 de la FSD.
   seedPresetsIfNeeded();
 
-  // Entra en modo autotune
-  if (digitalRead(DIP_SW4) == LOW) {
-    confirmarInicioAutoTune();
-  }
+  // DIP 1/2/3 activada (LOW) fuerza la carga del perfil correspondiente. Sin
+  // ninguna activada quedan los valores por defecto y se controla por BT. Con
+  // más de una no se carga ninguno: elegir en silencio sería peligroso en
+  // pista, así que se avisa y quedan los valores por defecto.
+  cargarPerfilPorDip();
 
   indicar_estado(estado);
 
@@ -307,28 +308,18 @@ void loop() {
     unsigned long t0 = millis();
     // espera y detecta si se mantiene pulsado
     while (digitalRead(PULSADOR) == LOW) {
-      // Modo autotune, toque largo en PULSADOR (>= 2000 ms) guarda los valores nuevos:
-      if (digitalRead(DIP_SW4) == LOW && millis() - t0 > 2000) {
-        guardarConstantesPID(KP, KD, SPEED);
-        estado = 1;  // fuerza que, al soltar el botón, el robot quede Detenido (ver debajo del while)
-        digitalWrite(LED, HIGH);
-        beep(2,500,8);
-        digitalWrite(LED, LOW);
-        delay(500);
-      }
-      // DIP_SW4 en HIGH (autotune no armado): toque largo (>= 2000 ms) recalibra la regleta:
-      else if (digitalRead(DIP_SW4) == HIGH && millis() - t0 > 2000) {
+      // Toque largo (>= 2000 ms): recalibra la regleta. Guardar KP/KD/SPEED
+      // es sólo por BT ('W').
+      if (millis() - t0 > 2000) {
         calibrarRegletaManual();
-        estado = 1;  // idem: fuerza que, al soltar el botón, el robot quede Detenido
+        estado = 1;  // fuerza que, al soltar el botón, el robot quede Detenido (ver debajo del while)
         delay(500);
       }
     }
     if (estado != 0) {
       estado = 0;
-    } else if (digitalRead(DIP_SW3) == 0) {
-      estado = 2;
     } else {
-      estado = 1;
+      estado = estadoDeArranque();
     }
     indicar_estado(estado);
   }
@@ -350,6 +341,14 @@ void loop() {
     btListen();
   }
 }  // FIN LOOP()
+
+
+/**** ESTADO DE ARRANQUE ***/
+// 2 (con turbina) si DIP 4 está activada (LOW) en este instante; 1 si no.
+// Lo usan el pulsador y el comando BT 'S' para que arranquen igual.
+byte estadoDeArranque() {
+  return (digitalRead(DIP_SW4) == LOW) ? 2 : 1;
+}
 
 
 /**** INDICAR ESTADO ***/
