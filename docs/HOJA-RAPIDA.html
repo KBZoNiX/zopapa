@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Zopapa — Hoja rápida</title>
+<style>
+  @page { size: A4; margin: 10mm; }
+  :root { --ink:#1b1b1b; --muted:#555; --rule:#c9c9c9; --accent:#b3261e; --blue:#1f5fa8; --bg:#fff; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--ink);
+    font: 9pt/1.3 "Helvetica Neue", Arial, sans-serif; }
+  .page { width:190mm; height:277mm; overflow:hidden; }
+  header { display:flex; justify-content:space-between; align-items:baseline;
+    border-bottom:2px solid var(--ink); padding-bottom:2mm; margin-bottom:3mm; }
+  header h1 { font-size:15pt; margin:0; letter-spacing:.5px; }
+  header span { color:var(--muted); font-size:8.5pt; }
+  h2 { font-size:10.5pt; margin:3.5mm 0 1.5mm; padding-left:2mm; border-left:3px solid var(--accent); }
+  h2.app { border-left-color:var(--blue); }
+  p { margin:1mm 0; }
+  table { width:100%; border-collapse:collapse; }
+  th, td { text-align:left; padding:1mm 1.5mm; border-bottom:1px solid var(--rule); vertical-align:top; }
+  th { font-size:8pt; text-transform:uppercase; color:var(--muted); letter-spacing:.3px; }
+  code, .k { font-family: "DejaVu Sans Mono", monospace; font-size:8.5pt; background:#f0f0f0;
+    padding:0 1mm; border-radius:1mm; }
+  .k { font-weight:bold; }
+  .two { display:grid; grid-template-columns: 1fr 1fr; gap:4mm; align-items:start; }
+  .note { font-size:8pt; color:var(--muted); margin-top:1mm; }
+  .warn { border:1px solid var(--accent); background:#fdf1f0; padding:1.5mm 2mm; margin-top:2mm; font-size:8.5pt; }
+  svg { width:100%; height:auto; display:block; }
+  .sig td:first-child { width:30%; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <h1>ZOPAPA · Hoja rápida</h1>
+  <span>Controles físicos y app Zopapa Control (Android) · Rev A</span>
+</header>
+
+<!-- 1. PULSADOR -->
+<h2>1 · Pulsador principal</h2>
+<div class="two">
+  <div>
+    <table>
+      <tr><th>Acción</th><th>Estado previo</th><th>Efecto</th></tr>
+      <tr><td><b>Toque corto</b></td><td>Detenido</td><td>Arranca. Con turbina si DIP 4 está activada.</td></tr>
+      <tr><td><b>Toque corto</b></td><td>En marcha</td><td>Detiene.</td></tr>
+      <tr><td><b>Mantener ≥ 2 s</b></td><td>Cualquiera</td><td>Recalibra la regleta (barrido de 3 s). Al soltar queda <b>Detenido</b>, nunca arranca solo.</td></tr>
+    </table>
+  </div>
+  <div>
+    <svg viewBox="0 0 300 150" role="img" aria-label="Diagrama de estados del pulsador">
+      <defs>
+        <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="#1b1b1b"/>
+        </marker>
+        <marker id="r" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="#b3261e"/>
+        </marker>
+      </defs>
+      <rect x="10" y="50" width="100" height="44" rx="8" fill="#eef4fb" stroke="#1f5fa8" stroke-width="1.5"/>
+      <text x="60" y="68" text-anchor="middle" font-size="12" font-weight="bold" fill="#1b1b1b">DETENIDO</text>
+      <text x="60" y="84" text-anchor="middle" font-size="9" fill="#555">motores y turbina off</text>
+
+      <rect x="190" y="50" width="100" height="44" rx="8" fill="#eaf6ea" stroke="#2e7d32" stroke-width="1.5"/>
+      <text x="240" y="68" text-anchor="middle" font-size="12" font-weight="bold" fill="#1b1b1b">EN MARCHA</text>
+      <text x="240" y="84" text-anchor="middle" font-size="9" fill="#555">sigue la línea</text>
+
+      <!-- toque corto ida y vuelta -->
+      <line x1="112" y1="62" x2="186" y2="62" stroke="#1b1b1b" stroke-width="1.3" marker-end="url(#a)"/>
+      <line x1="186" y1="78" x2="112" y2="78" stroke="#1b1b1b" stroke-width="1.3" marker-end="url(#a)"/>
+      <text x="149" y="54" text-anchor="middle" font-size="9">toque corto</text>
+      <text x="149" y="98" text-anchor="middle" font-size="9">toque corto</text>
+
+      <!-- mantener: calibra -->
+      <path d="M60 50 C 60 28, 240 28, 240 50" fill="none" stroke="#b3261e" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#r)"/>
+      <text x="150" y="14" text-anchor="middle" font-size="9" fill="#b3261e">mantener ≥ 2 s → barrido de calibración → Detenido</text>
+      <text x="150" y="124" text-anchor="middle" font-size="8.5" fill="#555">Si mantenés el pulsador, al soltar siempre queda Detenido.</text>
+    </svg>
+  </div>
+</div>
+
+<!-- 2. DIP -->
+<h2>2 · Llave DIP (perfil y turbina)</h2>
+<table>
+  <tr><th style="width:12%">Llave</th><th style="width:28%">Cuándo se lee</th><th>Función (activada = posición ON / LOW)</th></tr>
+  <tr><td><span class="k">1</span></td><td rowspan="3">Al encender el robot</td><td>Carga el <b>perfil 1</b> (KP/KD/Velocidad).</td></tr>
+  <tr><td><span class="k">2</span></td><td>Carga el <b>perfil 2</b>.</td></tr>
+  <tr><td><span class="k">3</span></td><td>Carga el <b>perfil 3</b>.</td></tr>
+  <tr><td><span class="k">4</span></td><td>Al pulsar <b>ARRANCAR</b> (pulsador o app)</td><td>Arranca <b>con turbina</b> de succión (velocidad según la corrección). Desactivada: sin turbina.</td></tr>
+</table>
+<p class="note">Solo una de las llaves 1–3 activada. Ninguna: valores por defecto, se controla desde la app. Más de una: no carga ningún perfil y suena 4 bips al encender. La llave 4 se lee en cada arranque, así que puede cambiarse entre corridas.</p>
+
+<!-- 3. APP -->
+<h2 class="app">3 · App Zopapa Control (Android)</h2>
+<p><b>Antes:</b> emparejar el módulo Bluetooth del robot desde los ajustes de Bluetooth de Android. La app solo lista dispositivos ya emparejados. Luego conectar desde la app.</p>
+
+<table>
+  <tr><th style="width:24%">Control</th><th>Qué hace</th></tr>
+  <tr><td><b>ARRANCAR / DETENER</b></td><td>Arranca o detiene el robot (equivale a <span class="k">S</span> / <span class="k">P</span>). Respeta la llave DIP 4.</td></tr>
+  <tr><td><b>Perfiles 1 · 2 · 3 → Cargar</b></td><td>Pasa KP, KD y Velocidad del perfil al robot. El perfil activo se marca en amarillo.</td></tr>
+  <tr><td><b>Perfiles → Guardar actual</b></td><td>Guarda los KP/KD/Velocidad vivos en ese perfil. Pide confirmación porque reemplaza lo anterior.</td></tr>
+  <tr><td><b>Ganancias manuales</b></td><td>Escribí KP, KD o Velocidad y apretá <b>Enter</b> para enviar. Cambia a modo "Manual" y no guarda en el perfil hasta usar <i>Guardar actual</i>.</td></tr>
+  <tr><td><b>Preflight</b></td><td>Muestra el chequeo previo: EEPROM, calibración, ganancias activas y tiempos de lazo.</td></tr>
+  <tr><td><b>Calibrar</b></td><td>Pide confirmación y hace el barrido de 3 s. Pasá la regleta sobre la línea al empezar.</td></tr>
+  <tr><td><b>AutoTune</b></td><td>Calcula KP/KD con oscilaciones breves. Sólo en memoria: para conservarlo, <i>Guardar actual</i> en un perfil.</td></tr>
+</table>
+
+<svg viewBox="0 0 540 60" role="img" aria-label="Orden sugerido antes de correr" style="margin-top:2mm">
+  <defs>
+    <marker id="b" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#1f5fa8"/>
+    </marker>
+  </defs>
+  <g font-size="10" text-anchor="middle">
+    <rect x="2"   y="14" width="96" height="32" rx="6" fill="#eef4fb" stroke="#1f5fa8"/><text x="50"  y="34">Conectar</text>
+    <rect x="128" y="14" width="96" height="32" rx="6" fill="#eef4fb" stroke="#1f5fa8"/><text x="176" y="34">Cargar perfil</text>
+    <rect x="254" y="14" width="96" height="32" rx="6" fill="#eef4fb" stroke="#1f5fa8"/><text x="302" y="34">Preflight</text>
+    <rect x="380" y="14" width="76" height="32" rx="6" fill="#eef4fb" stroke="#1f5fa8"/><text x="418" y="34">Calibrar*</text>
+    <rect x="476" y="14" width="62" height="32" rx="6" fill="#eaf6ea" stroke="#2e7d32"/><text x="507" y="34">Arrancar</text>
+  </g>
+  <g stroke="#1f5fa8" stroke-width="1.3" marker-end="url(#b)">
+    <line x1="98" y1="30" x2="126" y2="30"/>
+    <line x1="224" y1="30" x2="252" y2="30"/>
+    <line x1="350" y1="30" x2="378" y2="30"/>
+    <line x1="456" y1="30" x2="474" y2="30"/>
+  </g>
+</svg>
+<p class="note">* Calibrar sólo si cambió la pista, la luz o la superficie. Las ganancias y la velocidad no se pueden cambiar mientras el robot está en marcha ni durante una acción en curso: primero DETENER.</p>
+
+<div class="warn">
+  <b>Señales:</b> 1 bip + LED fijo = arrancó · 3 bips + LED apagado = se detuvo · 2 bips = calibración cargada de la memoria · 2 bips + bips rápidos (~3 s) = barrido en curso.
+</div>
+
+</div>
+</body>
+</html>
