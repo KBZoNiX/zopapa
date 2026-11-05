@@ -15,6 +15,10 @@ array). Full functional spec: docs/FSD.html.
   libraries of similar names.
 - `hardware/main_pcb/` — Rapiduino main PCB, KiCad project.
 - `hardware/line_sensor_pcb/` — ATR-8A sensor PCB, KiCad project.
+- `hardware/faldon_turbina/` — parametric OpenSCAD model of the TPU suction
+  skirt that bolts under the main PCB around the turbine (coordinates taken
+  from `Rapiduino.kicad_pcb`). The bundled STLs assume 8 mm ground clearance;
+  regenerate with the measured `altura_libre` — see its `README.md`.
 - `app/` — Zopapa Control, the Flutter/Android companion app for the BT
   command protocol in `src/zopapa/bt.ino` (start/stop, gain presets,
   preflight, calibration, plus the fuller bench-test/telemetry commands
