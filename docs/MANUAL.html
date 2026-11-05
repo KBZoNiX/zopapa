@@ -379,7 +379,7 @@
 <section id="s4">
   <h2><span class="num">4.</span> Ajuste automático (AutoTune)</h2>
   <p>El AutoTune calcula automáticamente las ganancias de corrección (KP/KD) haciendo oscilar al robot sobre la línea y midiendo la respuesta. Se inicia únicamente por Bluetooth/Serie, con el comando <code>T</code> (sección 5).</p>
-  <p>Durante la prueba (hasta 2&nbsp;s) el robot corrige de un lado a otro de forma controlada — es recomendable hacerlo con el robot sobre una guía recta o con las ruedas levantadas la primera vez. Al terminar con éxito (2 bips cortos), instala las nuevas ganancias — pero <strong>sólo en memoria de trabajo</strong>.</p>
+  <p>Durante la prueba (hasta 8&nbsp;s, valor por defecto del comando <code>M</code>) el robot corrige de un lado a otro de forma controlada — es recomendable hacerlo con el robot sobre una guía recta o con las ruedas levantadas la primera vez. Al terminar con éxito (2 bips cortos), instala las nuevas ganancias — pero <strong>sólo en memoria de trabajo</strong>.</p>
   <div class="note"><b>El resultado del AutoTune no se guarda solo</b> Para que las ganancias calculadas sobrevivan a un apagado, hay que guardarlas explícitamente: el comando <code>W</code> por Bluetooth/Serie.</div>
 </section>
 
